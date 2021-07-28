@@ -128,3 +128,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Añado (Nico)
+pyvenv.cfg
+.idea
+backend/gecko/Scripts/
+

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './components/App/App';
-import SignInSide from './components/SignIn/SignIn';
+import SignInSide from './components/SignInSide/SignInSide';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
