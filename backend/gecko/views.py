@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from gecko.serializers import AnalizeSerializer
+from user_profile.models import Profile
 
 @api_view(['POST'])
 @authentication_classes([])
@@ -19,9 +20,9 @@ def signup(request):
     if request.method == 'POST':
         try:
             data = JSONParser().parse(request)
-            #DNI
-            user = User.objects.create_user(data['username'], password=data['password'], first_name=data['name'], last_name=data['last_name'], email=data['email'])
+            user = User.objects.create_user(data['username'], password=data['password'], first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
             user.save()
+            Profile.objects.create(user=user, nro_doc=data['nro_doc'], country=data['country'], birth_date=data['birth_date'], job_type=data['job_type'], institution=data['institution'])
             token = Token.objects.create(user=user)
             return JsonResponse({'token':str(token)}, status=201)
         except IntegrityError:
@@ -56,5 +57,5 @@ class Analize(views.APIView):
         print(request.FILES['image'])
         print('BBB')
 
-        
+
         return JsonResponse({'test': 'hola'}, status=200)
