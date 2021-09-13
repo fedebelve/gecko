@@ -16,7 +16,12 @@ import gecko.preprocess as pre
 import os
 import cv2
 import numpy
-from gecko.settings import BASE_DIR
+from gecko.settings import BASE_DIR, RN_MODEL
+from gecko import settings
+import tensorflow as tf
+from tensorflow import keras 
+from keras.applications. inception_v3 import InceptionV3
+
 
 @api_view(['POST'])
 @authentication_classes([])
@@ -56,6 +61,7 @@ class Analize(views.APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser]
 
+
     def post(self, request, filename, format=None):
         print('AAA')
         print(request.data['eye'])
@@ -66,15 +72,19 @@ class Analize(views.APIView):
 
         if self._validate(img_path):
             pre_processed_image = self._pre_process_image(img_path)
-            result = self._process_image(pre_processed_image)
-            response = "OK"
+            response = self._process_image(pre_processed_image)
+            # print(type(result))
+            # print(result[0])
+            # print(result[0][0])
+            # response = result[0]
+
         else:
-            response= "La imagen no es apta para ser procesada."
+            response = "La imagen no es apta para ser procesada."
         
         os.remove(img_path)
         print('BBB')
 
-        return JsonResponse({'response': response}, status=200)
+        return JsonResponse({'response': str(response)}, status=200)
 
 
     def _validate(self,img_path):
@@ -118,7 +128,11 @@ class Analize(views.APIView):
 
 
     def _process_image(self,image):
-        pass
-
-
+        print("FFFFFFFFFFFFFF")
+        img = image.reshape(1,299,299,3)
+        print(f"Image shape:{img.shape}")
+        #img = cv2.resize(image,(299,299,3)) 
+        result = RN_MODEL.predict(img)
+        print(result)
+        return result[0][0]
 
