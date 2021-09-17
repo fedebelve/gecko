@@ -4,11 +4,15 @@ import './index.css';
 import App from './components/App/App';
 import SignInSide from './components/SignIn/SignIn';
 import reportWebVitals from './reportWebVitals';
+import ImageLoadScreen from './components/ImageLoadScreen/ImageLoadScreen';
+import ImageUploadButton from "./components/ImageLoadScreen/ImageUploadButton/ImageUploadButton";
 
 ReactDOM.render(
   <React.StrictMode>
     {/* <App /> */}
-    <SignInSide />
+    {/* <SignInSide /> */}
+    {/* <ImageLoadScreen/> */}
+    <ImageUploadButton />
   </React.StrictMode>,
   document.getElementById('root')
 );
