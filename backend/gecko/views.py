@@ -1,3 +1,4 @@
+from io import BytesIO
 from rest_framework import generics, permissions, views
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -21,7 +22,8 @@ from gecko import settings
 import tensorflow as tf
 from tensorflow import keras 
 from keras.applications. inception_v3 import InceptionV3
-
+import base64
+import PIL.Image as Image
 
 @api_view(['POST'])
 @authentication_classes([])
@@ -59,40 +61,38 @@ def login(request):
 class Analize(views.APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser]
+    parser_classes = [JSONParser]
 
 
-    def post(self, request, filename, format=None):
-        print('AAA')
-        print(request.data['eye'])
-        print(request.FILES['image'])
-        img_path = f"{BASE_DIR}/tmp/{request.FILES['image']}"
-        img = cv2.imdecode(numpy.fromstring(request.FILES['image'].read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
-        cv2.imwrite(img_path, img,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        results = []
 
-        if self._validate(img_path):
-            pre_processed_image = self._pre_process_image(img_path)
-            response = self._process_image(pre_processed_image)
-            # print(type(result))
-            # print(result[0])
-            # print(result[0][0])
-            # response = result[0]
-
-        else:
-            response = "La imagen no es apta para ser procesada."
+        for item in data['worklist']:
+         
+            img_bytes = base64.b64decode(item['img_bytes'])
+            img = Image.open(BytesIO(img_bytes))
+            img_path = f"{BASE_DIR}/tmp/{item['img_name']}"
+            img.save(img_path, "jpeg")
         
-        os.remove(img_path)
-        print('BBB')
 
-        return JsonResponse({'response': str(response)}, status=200)
+            if self._validate(img_path):
+                pre_processed_image = self._pre_process_image(img_path)
+                result = self._process_image(pre_processed_image)
+                item_result = {'img_name': item['img_name'], 'result': str(result)} 
+                results.append(item_result)
+  
+            else:
+                response = "La imagen no es apta para ser procesada."
+            
+            os.remove(img_path)
+
+        print(results)
+        return JsonResponse({'response': results}, status=200)
 
 
     def _validate(self,img_path):
-
-        if 20 < pre.brightness_level(img_path) < 100:
-            return True
-        else:
-            return False    
+        return 20 < pre.brightness_level(img_path) < 100
 
 
     def _pre_process_image(self, image_path):
@@ -102,7 +102,6 @@ class Analize(views.APIView):
         try:
             # Load the image and clone it for output.
             image = cv2.imread(os.path.abspath(image_path), -1)
-#            image = cv2.imread(os.path.abspath(f"{BASE_DIR}/tmp/{filename}"), -1)
 
             pre_processed_image = pre._resize_and_center_fundus(image, diameter=diameter)
 
@@ -115,7 +114,7 @@ class Analize(views.APIView):
                 #                         os.path.basename(image_filename))[0])
                 # output_path = os.path.join(save_path, image_jpeg_filename)
 
-                cv2.imwrite('/home/fede/gecko/test.jpeg', pre_processed_image,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
+                #cv2.imwrite('/home/fede/gecko/test.jpeg', pre_processed_image,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
 
                 success += 1
                 return pre_processed_image
@@ -128,12 +127,9 @@ class Analize(views.APIView):
 
 
     def _process_image(self,image):
-        print("FFFFFFFFFFFFFF")
         img = image.reshape(1,299,299,3)
         print(f"Image shape:{img.shape}")
-        #cv2.imwrite('/home/fede/gecko/leo.jpeg', img,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
-
         result = RN_MODEL.predict(img)
-        print(result)
+
         return result[0][0]
 
