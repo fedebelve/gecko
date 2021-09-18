@@ -131,7 +131,8 @@ class Analize(views.APIView):
         print("FFFFFFFFFFFFFF")
         img = image.reshape(1,299,299,3)
         print(f"Image shape:{img.shape}")
-        #img = cv2.resize(image,(299,299,3)) 
+        #cv2.imwrite('/home/fede/gecko/leo.jpeg', img,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
+
         result = RN_MODEL.predict(img)
         print(result)
         return result[0][0]
