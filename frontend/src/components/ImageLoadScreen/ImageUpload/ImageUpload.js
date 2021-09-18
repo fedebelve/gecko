@@ -11,10 +11,14 @@ const ImageUpload = () => {
 
     const handleSubmission = () => {
         const formData = new FormData();
-        formData.append('File', selectedFile);
-        fetch('localhost:8000/analyze', {
+        formData.append('image', selectedFile);
+        formData.append('eye', 'Left');
+        fetch(`http://localhost:8000/analize/${selectedFile.name}`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                "Authorization": "TOKEN f2e94d1c083f1f84117b5c515b028a2dcfc09776"
+            }
         }).then(response => response.json())
         .then(result => console.log('Success:', result))
         .catch(error => console.log('Error:', error));
