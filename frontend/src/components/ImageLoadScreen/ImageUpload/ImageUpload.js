@@ -13,6 +13,7 @@ const ImageUpload = () => {
         const formData = new FormData();
         formData.append('image', selectedFile);
         formData.append('eye', 'Left');
+        console.log("FILE CONTENT IMAGE_UPLOAD: " + JSON.stringify(selectedFile));
         fetch(`http://localhost:8000/analize/${selectedFile.name}`, {
             method: 'POST',
             body: formData,

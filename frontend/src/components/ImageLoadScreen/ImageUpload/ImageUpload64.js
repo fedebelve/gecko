@@ -10,18 +10,28 @@ const ImageUpload64 = () => {
     };
 
     const handleSubmission = () => {
-        const formData = new FormData();
-        formData.append('image', selectedFile);
-        formData.append('eye', 'Left');
-        fetch(`http://localhost:8000/analize/${selectedFile.name}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                "Authorization": "TOKEN f2e94d1c083f1f84117b5c515b028a2dcfc09776"
-            }
-        }).then(response => response.json())
-        .then(result => console.log('Success:', result))
-        .catch(error => console.log('Error:', error));
+        const reader = new FileReader();
+        reader.readAsDataURL(selectedFile);
+        reader.onload = () => {
+            console.log("FILE CONTENT: " + reader.result.slice(reader.result.indexOf(',') + 1, -1));
+            fetch(`http://localhost:8000/analize/`, {
+                method: 'POST',
+                body: {
+                    "worklist": [
+                        {
+                            "eye": "left",
+                            "img_name": "reti11",
+                            "img_bytes": reader.result.slice(reader.result.indexOf(',') + 1, -1)
+                        }
+                    ]
+                },
+                headers: {
+                    "Authorization": "TOKEN f2e94d1c083f1f84117b5c515b028a2dcfc09776"
+                }
+            }).then(response => response.json())
+            .then(result => console.log('Success:', result))
+            .catch(error => console.log('Error:', error));
+        }
     };
 
     return (

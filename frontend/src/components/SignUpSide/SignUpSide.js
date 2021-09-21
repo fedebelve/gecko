@@ -24,6 +24,11 @@ const SignUpSide = () => {
     const [passwordB, setPasswordB] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [nroDoc, setNroDoc] = useState('');
+    const [country, setCountry] = useState('');
+    const [birthDate, setBirthDate] = useState('');
+    const [jobType, setJobType] = useState('');
+    const [institution, setInstitution] = useState('');
     const classes = useStyles();
     const [alertUserNameAlreadyRegistered, setAlertUserNameAlreadyRegistered] = useState(false);
     const [alertPasswordsNotMatch, setAlertPasswordsNotMatch] = useState(false);
@@ -50,8 +55,16 @@ const SignUpSide = () => {
     const signUp = (email, password) => {
         axios.post('http://127.0.0.1:8000/signup', 
         {
-            'username': email,
-            'password': password
+            "username": email,
+            "password": password,
+            "first_name": firstName,
+            "last_name": lastName,
+            "email": email,
+            "nro_doc": nroDoc,
+            "country": country,
+            "birth_date": birthDate,
+            "job_type": jobType,
+            "institution": institution
         },
         {
             'headers': {
@@ -60,7 +73,7 @@ const SignUpSide = () => {
         })
         .then(response => {
             console.log("Response: " + JSON.stringify(response));
-            setRedirect('/sign-in');
+            setRedirect('/login');
         })
         .catch(error => {
             console.log("Error: " + JSON.stringify(error));
@@ -124,6 +137,51 @@ const SignUpSide = () => {
                 type="password"
                 id="passwordB"
             />
+            <TextField onChange={(event) => setNroDoc(event.target.value)}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="nroDoc"
+                label="Numero de documento"
+                id="nroDoc"
+            />
+            <TextField onChange={(event) => setCountry(event.target.value)}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="country"
+                label="Pais"
+                id="country"
+            />
+            <TextField onChange={(event) => setBirthDate(event.target.value)}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="birthDate"
+                label="Fecha de nacimiento"
+                id="birthDate"
+            />
+            <TextField onChange={(event) => setJobType(event.target.value)}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="jobType"
+                label="Trabajo"
+                id="jobType"
+            />
+            <TextField onChange={(event) => setInstitution(event.target.value)}
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="institution"
+                label="Institución"
+                id="institution"
+            />
             <Button onClick={(event) => {
                     event.preventDefault(); // Para evitar que recargue la página 
                     if (validateFormInput({ passwordA, passwordB }))
@@ -147,7 +205,7 @@ const SignUpSide = () => {
             }
             <Grid container>
                 <Grid item>
-                    <NavLink to="/sign-in" variant="body2">
+                    <NavLink to="/login" variant="body2">
                         {"Do you already have an account? Sign In"}
                     </NavLink>
                 </Grid>

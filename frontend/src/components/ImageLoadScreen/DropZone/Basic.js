@@ -1,101 +1,61 @@
 import React, {useState, useMemo, useCallback, useEffect} from 'react';
 import {useDropzone} from 'react-dropzone';
 import Button from '@mui/material/Button'; 
-import axios from 'axios';
-
-const baseStyle = {
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  padding: '20px',
-  borderWidth: 2,
-  borderRadius: 2,
-  borderColor: '#eeeeee',
-  borderStyle: 'dashed',
-  backgroundColor: '#fafafa',
-  color: '#bdbdbd',
-  outline: 'none',
-  transition: 'border .24s ease-in-out'
-};
-
-const activeStyle = {
-  borderColor: '#2196f3'
-};
-
-const acceptStyle = {
-  borderColor: '#00e676'
-};
-
-const rejectStyle = {
-  borderColor: '#ff1744'
-};
-
-const thumbsContainer = {
-    display: 'flex',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 16
-  };
-  
-  const thumb = {
-    display: 'inline-flex',
-    borderRadius: 2,
-    border: '1px solid #eaeaea',
-    marginBottom: 8,
-    marginRight: 8,
-    width: 100,
-    height: 100,
-    padding: 4,
-    boxSizing: 'border-box'
-  };
-  
-  const thumbInner = {
-    display: 'flex',
-    minWidth: 0,
-    overflow: 'hidden'
-  };
-  
-  const img = {
-    display: 'block',
-    width: 'auto',
-    height: '100%'
-  };
+import {baseStyle, activeStyle, acceptStyle, 
+  rejectStyle, thumbsContainer, thumb, thumbInner, img} from './basic-styles';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import ImageViewer from './ImageViewer';
 
 const Basic = (props) => {
     const [imageUrl, setImageUrl] = useState('');
     const [files, setFiles] = useState([]);
+    const [file, setFile] = useState();
+    const [result, setResult] = useState({});
+    const [flagResult, setFlagResult] = useState(false);
+    const [flagFileLoaded, setFlagFileLoaded] = useState(false);
 
     // Handlear el archivo subido 
     const onDrop = useCallback((acceptedFiles) => {
-        setFiles(acceptedFiles.map(file => Object.assign(file, {
-            preview: URL.createObjectURL(file)
-        })));
+        // To generate files preview
+        // setFiles(acceptedFiles.map(file => Object.assign(file, {
+        //     preview: URL.createObjectURL(file)
+        // })));
+        // end
+        setFlagFileLoaded(true);
         acceptedFiles.forEach((file) => {
-            console.log("FILE:" + JSON.stringify(file));
+            setFile(file);
             setImageUrl(file.path);
             const reader = new FileReader();
 
-            // reader.onabort = () => console.log('file reading was aborted')
-            // reader.onerror = () => console.log('file reading has failed')
+            reader.onabort = () => console.log('file reading was aborted')
+            reader.onerror = () => console.log('file reading has failed')
             reader.onload = () => {
             // Do whatever you want with the file contents
                 const dataURL = reader.result;
                 const output = document.getElementById('image_loaded');
                 output.src = dataURL;
-                setFiles(arr => [...arr, dataURL])
+                // setFiles(arr => [...arr, dataURL]);
+
+                // Send file to backend
             }
-            reader.readAsArrayBuffer(file)
-            // reader.readAsDataURL(file);
+            // reader.readAsBinaryString(file)
+            reader.readAsDataURL(file);
+            setResult('');
         })}, [])
 
   const {
+    acceptedFiles,
     getRootProps,
     getInputProps,
     isDragActive,
     isDragAccept,
     isDragReject
-  } = useDropzone({accept: 'image/*', onDrop});
+  } = useDropzone({
+    accept: 'image/jpeg, image/png',
+    maxFiles: 1,
+    onDrop
+  });
 
   const style = useMemo(() => ({
     ...baseStyle,
@@ -124,27 +84,80 @@ const Basic = (props) => {
     files.forEach(file => URL.revokeObjectURL(file.preview));
   }, [files]);
 
+  const archivos = acceptedFiles.map(file => (
+    <li key={file.path}>
+      {file.path} - {file.size} bytes
+    </li>
+  ));
+
+  const sendFile = () => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('eye', 'Left');
+    fetch(`http://localhost:8000/analize/${file.name}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            "Authorization": "TOKEN f2e94d1c083f1f84117b5c515b028a2dcfc09776"
+        }
+    }).then(response => response.json())
+    .then(result => {
+      setResult(result);
+      setFlagResult(true);
+      console.log('Success:', result);
+    })
+    .catch(error => console.log('Error:', error));
+  }
+
+  const deleteImage = () => {
+    const output = document.getElementById('image_loaded');
+    // output.src = "";
+    // const resultAlert = document.getElementById('result-alert');
+    // resultAlert = '';
+    // setResult(null);
+    setFlagResult(false);
+    setFlagFileLoaded(false);
+  }
+
+  const analysisResult = result.response === 'La imagen no es apta para ser procesada.' ?
+  <Alert severity="error">
+    {result.response}
+  </Alert>
+  :
+  <Alert severity="success">
+    {result.response}
+  </Alert>
+
   return (
     <div className="container">
       <div {...getRootProps({style})}>
         <input {...getInputProps()} />
         <p>Arrastra y suelta la retinografía en esta región.</p>
       </div>
-      <aside style={thumbsContainer}>
+      {/* <aside style={thumbsContainer}>
         {thumbs}
-      </aside>
-      <Button onClick={() => {
-          console.log("FILE 0: " + JSON.stringify(files[0]))
-          axios({
-            method: 'post',
-            url: 'endpoint-backend',
-            responseType: 'stream'
-          })
-            .then(function (response) {
-            //   response.data.pipe(fs.createWriteStream('44349_left.jpeg'))
-            });   
-        }} variant="outlined">Enviar</Button>
-        <img width="800px" id="image_loaded"/>
+      </aside> */}
+      <br/>
+        <Button onClick={sendFile} variant="outlined">Enviar</Button>
+        <Button onClick={deleteImage} variant="outlined" color="error">Borrar</Button>
+        {flagFileLoaded === true && <div>
+          <h4>Vista previa:</h4>
+          <img width="400px" id="image_loaded"/>
+          <aside>
+              <h4>Detalle:</h4>
+              <ul>{archivos}</ul>
+          </aside>
+        </div>
+        }
+        {flagResult === true && 
+          <div>
+            <h4>Resultados:</h4>
+            <div id="result-alert">
+              {flagResult === false ? null : analysisResult}
+            </div>
+          </div>
+        }
+        <br/>
     </div>
   );
 }
