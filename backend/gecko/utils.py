@@ -4,6 +4,8 @@ from tensorflow import keras
 from keras.applications. inception_v3 import InceptionV3
 import os
 import random
+from django.conf import settings
+
 
 def create_model():
     random.seed(42)

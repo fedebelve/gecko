@@ -45,8 +45,9 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        #'rest_framework.authentication.TokenAuthentication',
+        #'rest_framework.authentication.SessionAuthentication',
+        'gecko.authentication.ExpiringTokenAuthentication'
     ]
 }
 
@@ -141,4 +142,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from gecko.utils import create_model
 
+TOKEN_EXPIRED_AFTER_SECONDS = 120
+
 RN_MODEL = create_model()
+

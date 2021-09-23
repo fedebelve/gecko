@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('signup', views.signup),
-    path('login', views.login),
+    path('signin', views.signin),
     path('analize/<filename>', views.Analize.as_view()),
     path('analize/', views.AnalizeBase64.as_view())
 ]
