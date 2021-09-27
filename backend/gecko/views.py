@@ -24,11 +24,11 @@ from keras.applications. inception_v3 import InceptionV3
 import base64
 import PIL.Image as Image
 from io import BytesIO 
-from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK, HTTP_404_NOT_FOUND)
+from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND)
 from rest_framework.response import Response
 from .authentication import token_expire_handler, expires_in
-
-
+from rest_framework_api_key.permissions import HasAPIKey
+from organization.permissions import HasOrganizationAPIKey
 # @api_view(['POST'])
 # @authentication_classes([])
 # def signup(request):
@@ -114,14 +114,14 @@ class Analize(views.APIView):
 
     def _process_image(self, image):
         img = image.reshape(1, 299, 299, 3)
-        print(f"Image shape:{img.shape}")
+        #print(f"Image shape:{img.shape}")
         result = RN_MODEL.predict(img)
 
         return result[0][0]
 
 class AnalizeBase64(views.APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    #authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
     parser_classes = [JSONParser]
 
     def post(self, request, format=None):
@@ -184,7 +184,7 @@ class AnalizeBase64(views.APIView):
 
     def _process_image(self, image):
         img = image.reshape(1, 299, 299, 3)
-        print(f"Image shape:{img.shape}")
+        #print(f"Image shape:{img.shape}")
         result = RN_MODEL.predict(img)
 
         return result[0][0]
@@ -207,7 +207,7 @@ def signin(request):
     is_expired, token = token_expire_handler(token)
     user_serialized = UserSigninSerializer(user)
 
-    return Response({'user': user_serialized.data, 'expires_in': expires_in(token), 'token': token.key}, status=HTTP_200_OK)
+    return Response({'token': token.key, 'expires_in': expires_in(token)}, status=HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -228,4 +228,4 @@ def signup(request):
     user = user_serializer.save()
     Profile.objects.create(user=user, nro_doc=data['nro_doc'], country=data['country'], birth_date=data['birth_date'], job_type=data['job_type'], institution=data['institution'])
     
-    return Response({'user': user_serializer.data, 'profile': user_profile_serializer.data}, status=HTTP_200_OK)
+    return Response({}, status=HTTP_201_CREATED)

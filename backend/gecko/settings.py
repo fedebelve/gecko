@@ -38,8 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user_profile',
+    'organization',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_api_key',
     'corsheaders'
 ]
 
@@ -142,7 +144,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from gecko.utils import create_model
 
-TOKEN_EXPIRED_AFTER_SECONDS = 120
+TOKEN_EXPIRED_AFTER_SECONDS = 60
 
 RN_MODEL = create_model()
 

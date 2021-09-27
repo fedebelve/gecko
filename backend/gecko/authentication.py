@@ -1,3 +1,4 @@
+import datetime
 from django.conf import settings
 from datetime import timedelta
 from django.utils import timezone
@@ -26,6 +27,7 @@ def token_expire_handler(token):
 class ExpiringTokenAuthentication(TokenAuthentication):
 
     def authenticate_credentials(self, key):
+
         try:
             token = Token.objects.get(key=key)
         except Token.DoesNotExist:
@@ -39,5 +41,8 @@ class ExpiringTokenAuthentication(TokenAuthentication):
 
         if is_expired:
             raise AuthenticationFailed("The Token is expired")
+
+        token.created = timezone.now() + timedelta(seconds=settings.TOKEN_EXPIRED_AFTER_SECONDS) 
+        token.save()
 
         return (token.user, token)
