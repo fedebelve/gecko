@@ -17,6 +17,7 @@ import useStyles from './useStyles';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import { Alert } from '@material-ui/lab';
+import { useFormik } from 'formik';
 
 const SignUpSide = () => {
     const [email, setEmail] = useState('');
@@ -32,9 +33,28 @@ const SignUpSide = () => {
     const classes = useStyles();
     const [alertUserNameAlreadyRegistered, setAlertUserNameAlreadyRegistered] = useState(false);
     const [alertPasswordsNotMatch, setAlertPasswordsNotMatch] = useState(false);
-
     const [redirect, setRedirect] = useState('');
     
+    const formik = useFormik({
+        initialValues: {
+            first_name: '',
+            last_name: '',
+            email: '',
+            password: '',
+            doc_number: '',
+            country: '',
+            birth_date: '',
+            job_type: '',
+            institution: '',
+            passwordA: '',
+            passwordB: ''
+        },
+        onSubmit: values => {
+            console.log('Form data to submit', values);
+        }
+    });
+
+    // console.log('Form values', formik.values);
 
     const VALID_EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
     
@@ -51,7 +71,7 @@ const SignUpSide = () => {
             return false;
         }
     };
-
+    
     const signUp = (email, password) => {
         axios.post('http://127.0.0.1:8000/signup', 
         {
@@ -82,31 +102,30 @@ const SignUpSide = () => {
     }
 
     const formRedirect = redirect ? <Redirect to={redirect} /> :
-        <form className={classes.form} noValidate>
-            <TextField onChange={(event) => setFirstName(event.target.value)}
+        // <form className={classes.form} noValidate>
+        <form className={classes.form} noValidate onSubmit={formik.handleSubmit}>
+            <TextField onChange={formik.handleChange} value={formik.values.first_name}
                 variant="outlined"
                 margin="normal"
                 required
                 fullWidth
-                id="first-name"
+                id="first_name"
                 label="First name"
-                name="first-name"
+                name="first_name"
                 placeholder="Your first name"
                 autoFocus
-                value={firstName}
             />
-            <TextField onChange={(event) => setLastName(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.last_name}
                 variant="outlined"
                 margin="normal"
                 required
                 fullWidth
-                id="last-name"
+                id="last_name"
                 label="Last name"
-                name="last-name"
+                name="last_name"
                 placeholder="Your last name"
-                value={lastName}
             />
-            <TextField onChange={(event) => setEmail(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.email}
                 variant="outlined"
                 margin="normal"
                 required
@@ -115,9 +134,8 @@ const SignUpSide = () => {
                 label="E-mail"
                 name="email"
                 placeholder="email@example.com"
-                value={email}
             />
-            <TextField onChange={(event) => setPasswordA(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.passwordA}
                 variant="outlined"
                 margin="normal"
                 required
@@ -127,7 +145,7 @@ const SignUpSide = () => {
                 type="password"
                 id="passwordA"
             />
-            <TextField onChange={(event) => setPasswordB(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.passwordB}
                 variant="outlined"
                 margin="normal"
                 required
@@ -137,16 +155,16 @@ const SignUpSide = () => {
                 type="password"
                 id="passwordB"
             />
-            <TextField onChange={(event) => setNroDoc(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.doc_number}
                 variant="outlined"
                 margin="normal"
                 required
                 fullWidth
-                name="nroDoc"
+                name="doc_number"
                 label="Numero de documento"
-                id="nroDoc"
+                id="doc_number"
             />
-            <TextField onChange={(event) => setCountry(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.country}
                 variant="outlined"
                 margin="normal"
                 required
@@ -155,7 +173,7 @@ const SignUpSide = () => {
                 label="Pais"
                 id="country"
             />
-            <TextField onChange={(event) => setBirthDate(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.birth_date}
                 variant="outlined"
                 margin="normal"
                 required
@@ -164,7 +182,7 @@ const SignUpSide = () => {
                 label="Fecha de nacimiento"
                 id="birthDate"
             />
-            <TextField onChange={(event) => setJobType(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.job_type}
                 variant="outlined"
                 margin="normal"
                 required
@@ -173,7 +191,7 @@ const SignUpSide = () => {
                 label="Trabajo"
                 id="jobType"
             />
-            <TextField onChange={(event) => setInstitution(event.target.value)}
+            <TextField onChange={formik.handleChange} value={formik.values.institution}
                 variant="outlined"
                 margin="normal"
                 required
@@ -182,11 +200,11 @@ const SignUpSide = () => {
                 label="Institución"
                 id="institution"
             />
-            <Button onClick={(event) => {
-                    event.preventDefault(); // Para evitar que recargue la página 
-                    if (validateFormInput({ passwordA, passwordB }))
-                        signUp(email, passwordA);
-                }}
+            <Button 
+                    // event.preventDefault(); // Para evitar que recargue la página 
+                    // if (validateFormInput({ passwordA, passwordB }))
+                    //     signUp(email, passwordA);
+                // }}
                 type="submit"
                 fullWidth
                 variant="contained"

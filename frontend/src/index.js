@@ -28,8 +28,8 @@ ReactDOM.render(
       {/* <HomePage/> */}
       {/* <SignInSide/> */}
       {/* <SignInSide/> */}
-      {/* <AppComponent/> */}
-      <ImageUpload64 />
+      <AppComponent/>
+      {/* <ImageUpload64 /> */}
     </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')
