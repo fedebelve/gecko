@@ -209,7 +209,7 @@ def signin(request):
     is_expired, token = token_expire_handler(token)
     user_serialized = UserSigninSerializer(user)
 
-    return Response({'token': token.key, 'expires_in': expires_in(token)}, status=HTTP_200_OK)
+    return Response({'token': token.key,'first_name':  user.first_name,'last_name': user.last_name, 'expires_in': expires_in(token)}, status=HTTP_200_OK)
 
 
 @api_view(['POST'])
