@@ -29,6 +29,8 @@ from rest_framework.response import Response
 from .authentication import token_expire_handler, expires_in
 from rest_framework_api_key.permissions import HasAPIKey
 from organization.permissions import HasOrganizationAPIKey
+from django.contrib.auth.hashers import make_password
+
 # @api_view(['POST'])
 # @authentication_classes([])
 # def signup(request):
@@ -216,7 +218,7 @@ def signin(request):
 def signup(request):
 
     data = JSONParser().parse(request)
-    user_serializer = UserSerializer(data = {'username': data['username'], 'password': data['password'], 'first_name': data['first_name'], 'last_name': data['last_name'], 'email':data['email']})
+    user_serializer = UserSerializer(data = {'username': data['username'], 'password': make_password(data['password']), 'first_name': data['first_name'], 'last_name': data['last_name'], 'email':data['email']})
     user_profile_serializer = UserProfileSerializer(data = {'nro_doc': data['nro_doc'], 'country': data['country'], 'birth_date': data['birth_date'], 'job_type': data['job_type'], 'institution': data['institution']})
 
     user_valid = user_serializer.is_valid()

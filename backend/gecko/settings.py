@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+from gecko.utils import load_model
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -142,9 +144,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-from gecko.utils import create_model
-
 TOKEN_EXPIRED_AFTER_SECONDS = 60
 
-RN_MODEL = create_model()
+RN_MODEL = load_model()
 

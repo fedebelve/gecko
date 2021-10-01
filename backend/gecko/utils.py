@@ -11,8 +11,6 @@ def create_model():
     random.seed(42)
     model_name = 'model_ft.008-0.592.h5'
     #self.graph = tf.get_default_graph()
-    print(settings.MODEL_ROOT)
-    print(os.path.join(settings.MODEL_ROOT, model_name))
 
     base_model = InceptionV3(
         weights='imagenet',  # Load weights pre-trained on ImageNet.
@@ -39,3 +37,37 @@ def create_model():
     model.load_weights(os.path.join(settings.MODEL_ROOT, model_name))
 
     return model
+
+
+from keras import backend as K
+
+def accuracy_m(y_true, y_pred):
+    y_true = K.ones_like(y_true)
+    acc = K.mean(K.equal(y_true, K.round(y_pred)))
+    return acc
+
+def recall_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    all_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (all_positives + K.epsilon())
+    return recall
+
+# Crear custom las otras fp, fn, tn
+def true_positives_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    return true_positives
+
+def precision_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+
+def f1score_m(y_true, y_pred):
+    precision = precision_m(y_true, y_pred)
+    recall = recall_m(y_true, y_pred)
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+
+
+def load_model():
+    return tf.keras.models.load_model(settings.MODEL_ROOT, custom_objects={'f1score_m': f1score_m, 'precision_m': precision_m, 'true_positives_m': true_positives_m, 'recall_m': recall_m, 'accuracy_m': accuracy_m})
