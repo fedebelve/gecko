@@ -1,3 +1,9 @@
+# Exclude models folder
+backend/models
+
+# Exclude virtual enviroment folder
+/gecko
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
