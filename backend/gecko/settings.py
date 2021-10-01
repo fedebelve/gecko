@@ -144,7 +144,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-TOKEN_EXPIRED_AFTER_SECONDS = 60
+TOKEN_EXPIRED_AFTER_SECONDS = 180000
 
 RN_MODEL = load_model()
 
