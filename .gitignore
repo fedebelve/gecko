@@ -136,3 +136,5 @@ dmypy.json
 #
 backend/gecko/Scripts/
 pyvenv.cfg
+
+backend/models/*
