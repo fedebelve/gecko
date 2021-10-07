@@ -10,6 +10,8 @@ from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+#from backend.gecko import utils
+from gecko.utils import clasify, fill
 from gecko.serializers import AnalizeSerializer
 from user_profile.models import Profile
 from user_profile.serializers import UserSigninSerializer, UserProfileSerializer, UserSerializer
@@ -132,7 +134,9 @@ class AnalizeBase64(views.APIView):
 
         for item in data['worklist']:
 
+            item['img_bytes'] = item['img_bytes'] + fill(len(item['img_bytes']))
             img_bytes = base64.b64decode(item['img_bytes'])
+
             img = Image.open(BytesIO(img_bytes))
             img_path = f"{BASE_DIR}/tmp/{item['img_name']}"
             img.save(img_path, "jpeg")
@@ -140,7 +144,8 @@ class AnalizeBase64(views.APIView):
             if self._validate(img_path):
                 pre_processed_image = self._pre_process_image(img_path)
                 result = self._process_image(pre_processed_image)
-                item_result = {'img_name': item['img_name'], 'result': str(result)}
+                result, description = clasify(result)
+                item_result = {'img_name': item['img_name'], 'result': str(result), 'description': description}
                 results.append(item_result)
 
             else:

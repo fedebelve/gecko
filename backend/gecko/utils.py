@@ -5,6 +5,7 @@ from keras.applications. inception_v3 import InceptionV3
 import os
 import random
 from django.conf import settings
+#from gecko.settings import RN_UMBRAL_0, RN_UMBRAL_1, RN_UMBRAL_2, RN_UMBRAL_3, RN_UMBRAL_4
 
 
 def create_model():
@@ -71,3 +72,31 @@ def f1score_m(y_true, y_pred):
 
 def load_model():
     return tf.keras.models.load_model(settings.MODEL_ROOT, custom_objects={'f1score_m': f1score_m, 'precision_m': precision_m, 'true_positives_m': true_positives_m, 'recall_m': recall_m, 'accuracy_m': accuracy_m})
+
+
+def clasify(value):
+    
+    UMBRAL=[ 'No hay Retinopatia Diabetica', 'Retinopatia Diabetica No Profiliferativa', 'Retinopatia Diabetica No Profiliferativa', 'Retinopatia Diabetica No Profiliferativa', 'Retinopatia Diabetica Proliferativa']
+
+    if (value < settings.RN_UMBRAL_0):
+        return int(0), UMBRAL[0]
+    if(value < settings.RN_UMBRAL_1):
+        return int(1), UMBRAL[1]
+    if(value < settings.RN_UMBRAL_2):
+        return int(2), UMBRAL[2]
+    if(value <= settings.RN_UMBRAL_3):
+        return int(3), UMBRAL[3]
+    else:
+        return int(4), UMBRAL[4]
+
+def fill(cant_bytes):
+    resto = cant_bytes%4
+    fill = ''
+    if resto == 1:
+        fill = '==='
+    if resto == 2:
+        fill = '=='
+    if resto == 3:
+        fill = '='
+
+    return fill
