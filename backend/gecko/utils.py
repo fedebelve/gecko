@@ -75,16 +75,16 @@ def load_model():
 
 
 def clasify(value):
-    
-    UMBRAL=[ 'No hay Retinopatia Diabetica', 'Retinopatia Diabetica No Profiliferativa', 'Retinopatia Diabetica No Profiliferativa', 'Retinopatia Diabetica No Profiliferativa', 'Retinopatia Diabetica Proliferativa']
-
-    if (value < settings.RN_UMBRAL_0):
+    UMBRAL = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve',
+              'Retinopatía Diabética No Proliferativa Moderada', 'Retinopatía Diabética No Proliferativa Severa',
+              'Retinopatía Diabética Proliferativa']
+    if value < settings.RN_UMBRAL_0:
         return int(0), UMBRAL[0]
-    if(value < settings.RN_UMBRAL_1):
+    if value < settings.RN_UMBRAL_1:
         return int(1), UMBRAL[1]
-    if(value < settings.RN_UMBRAL_2):
+    if value < settings.RN_UMBRAL_2:
         return int(2), UMBRAL[2]
-    if(value <= settings.RN_UMBRAL_3):
+    if value <= settings.RN_UMBRAL_3:
         return int(3), UMBRAL[3]
     else:
         return int(4), UMBRAL[4]
