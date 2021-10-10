@@ -19,14 +19,14 @@ import gecko.preprocess as pre
 import os
 import cv2
 import numpy
-from gecko.settings import BASE_DIR, RN_MODEL
+from gecko.settings import BASE_DIR, RN_INCEPTION_MODEL, RN_VALIDATOR_MODEL
 import tensorflow as tf
 from tensorflow import keras 
 from keras.applications. inception_v3 import InceptionV3
 import base64
 import PIL.Image as Image
 from io import BytesIO 
-from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND)
+from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND)
 from rest_framework.response import Response
 from .authentication import token_expire_handler, expires_in
 from rest_framework_api_key.permissions import HasAPIKey
@@ -119,7 +119,7 @@ class Analize(views.APIView):
     def _process_image(self, image):
         img = image.reshape(1, 299, 299, 3)
         #print(f"Image shape:{img.shape}")
-        result = RN_MODEL.predict(img)
+        result = RN_INCEPTION_MODEL.predict(img)
 
         return result[0][0]
 
@@ -139,29 +139,52 @@ class AnalizeBase64(views.APIView):
 
             img = Image.open(BytesIO(img_bytes))
             img_path = f"{BASE_DIR}/tmp/{item['img_name']}"
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+
             img.save(img_path, "jpeg")
 
-            if self._validate(img_path):
-                pre_processed_image = self._pre_process_image(img_path)
+            brightness_level_ok, is_retinography = self._validate(img_path)
+
+            if brightness_level_ok and is_retinography:
+                pre_processed_image = self._pre_process_image(img_path, 299)
                 result = self._process_image(pre_processed_image)
                 result, description = clasify(result)
-                item_result = {'img_name': item['img_name'], 'result': str(result), 'description': description}
-                results.append(item_result)
+                item_result = {'img_name': item['img_name'], 'result': str(result), 'description': description, 'result_code': "OK"}
+                
 
             else:
-                response = "La imagen no es apta para ser procesada."
+                if not brightness_level_ok:
+                    item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no posee la calidad suficiente", 'result_code': "poorQualityImage"}
 
+                if not is_retinography:
+                    item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no es una retinografia", 'result_code': "invalidImage"}
+                
+                
+            results.append(item_result)
             os.remove(img_path)
 
         print(results)
         return JsonResponse({'response': results}, status=200)
 
     def _validate(self, img_path):
-        return 20 < pre.brightness_level(img_path) < 100
+        is_retinography = self._is_retinography(img_path)
+        brightness_level_ok = self._check_brightness_level(img_path)
 
-    def _pre_process_image(self, image_path):
+        return brightness_level_ok, is_retinography
 
-        diameter = 299
+    def _is_retinography(self, img_path):
+        pre_processed_image = self._pre_process_image(img_path, 224)
+        img = pre_processed_image.reshape(1, 224, 224, 3)
+        if RN_VALIDATOR_MODEL.predict(img) < 0.5:
+            return True
+
+    def _check_brightness_level(self,img_path):
+        return (25 < pre.brightness_level(img_path) < 150)
+
+    def _pre_process_image(self, image_path, diameter = 299):
+
+        #diameter = 299
         success = 0
         try:
             # Load the image and clone it for output.
@@ -192,7 +215,7 @@ class AnalizeBase64(views.APIView):
     def _process_image(self, image):
         img = image.reshape(1, 299, 299, 3)
         #print(f"Image shape:{img.shape}")
-        result = RN_MODEL.predict(img)
+        result = RN_INCEPTION_MODEL.predict(img)
 
         return result[0][0]
 
@@ -207,7 +230,7 @@ def signin(request):
     user = authenticate(username=signin_serializer.data['username'], password=signin_serializer.data['password'])
 
     if not user:
-        return Response({'detail': 'Invalid Credentials or activate account'}, status=HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Invalid Credentials or activate account'}, status=HTTP_401_UNAUTHORIZED)
 
     token, _ = Token.objects.get_or_create(user=user)
 

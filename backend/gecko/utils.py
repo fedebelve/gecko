@@ -70,8 +70,8 @@ def f1score_m(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def load_model():
-    return tf.keras.models.load_model(settings.MODEL_ROOT, custom_objects={'f1score_m': f1score_m, 'precision_m': precision_m, 'true_positives_m': true_positives_m, 'recall_m': recall_m, 'accuracy_m': accuracy_m})
+def load_model(model_name):
+    return tf.keras.models.load_model(os.path.join(settings.MODEL_ROOT, model_name), custom_objects={'f1score_m': f1score_m, 'precision_m': precision_m, 'true_positives_m': true_positives_m, 'recall_m': recall_m, 'accuracy_m': accuracy_m})
 
 
 def clasify(value):

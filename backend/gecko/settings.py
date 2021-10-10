@@ -146,7 +146,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TOKEN_EXPIRED_AFTER_SECONDS = 180000
 
-RN_MODEL = load_model()
+RN_INCEPTION_MODEL = load_model('inception')
+RN_VALIDATOR_MODEL = load_model('validator')
 
 RN_UMBRAL_0 = 0.5
 RN_UMBRAL_1 = 1.5
