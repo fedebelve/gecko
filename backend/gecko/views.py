@@ -145,6 +145,7 @@ class AnalizeBase64(views.APIView):
             img.save(img_path, "jpeg")
 
             brightness_level_ok, is_retinography = self._validate(img_path)
+            result = 0
 
             if brightness_level_ok and is_retinography:
                 pre_processed_image = self._pre_process_image(img_path, 299)
