@@ -147,21 +147,28 @@ class AnalizeBase64(views.APIView):
             brightness_level_ok, is_retinography = self._validate(img_path)
             result = 0
 
+            item_result = {'img_name': item['img_name']}
+
             if brightness_level_ok and is_retinography:
                 pre_processed_image = self._pre_process_image(img_path, 299)
                 result = self._process_image(pre_processed_image)
                 result, description = clasify(result)
-                item_result = {'img_name': item['img_name'], 'result': str(result), 'description': description, 'result_code': "OK"}
+                result_code="OK"
+                #item_result = {'img_name': item['img_name'], 'result': str(result), 'description': description, 'result_code': "OK"}
                 
 
             else:
                 if not brightness_level_ok:
-                    item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no posee la calidad suficiente", 'result_code': "poorQualityImage"}
+                    description="La imagen no posee la calidad suficiente"
+                    result_code="poorQualityImage"
+                    #item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no posee la calidad suficiente", 'result_code': "poorQualityImage"}
 
                 if not is_retinography:
-                    item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no es una retinografia", 'result_code': "invalidImage"}
-                
-                
+                    description="La imagen no es una retinografia"
+                    result_code="invalidImage"
+                    #item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no es una retinografia", 'result_code': "invalidImage"}
+
+            item_result.update(result=result, description=description, result_code=result_code)
             results.append(item_result)
             os.remove(img_path)
 
@@ -233,7 +240,12 @@ def signin(request):
     if not user:
         return Response({'detail': 'Invalid Credentials or activate account'}, status=HTTP_401_UNAUTHORIZED)
 
-    token, _ = Token.objects.get_or_create(user=user)
+    try:
+        token = Token.objects.get(user=user)
+        token.delete()
+    finally:
+        token, _ = Token.objects.get_or_create(user=user)
+
 
     is_expired, token = token_expire_handler(token)
     user_serialized = UserSigninSerializer(user)
