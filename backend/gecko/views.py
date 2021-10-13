@@ -19,7 +19,7 @@ import gecko.preprocess as pre
 import os
 import cv2
 import numpy
-from gecko.settings import BASE_DIR, RN_INCEPTION_MODEL, RN_VALIDATOR_MODEL
+from gecko.settings import BASE_DIR, RN_INCEPTION_MODEL #, RN_VALIDATOR_MODEL
 import tensorflow as tf
 from tensorflow import keras 
 from keras.applications. inception_v3 import InceptionV3
@@ -151,22 +151,24 @@ class AnalizeBase64(views.APIView):
 
             if brightness_level_ok and is_retinography:
                 pre_processed_image = self._pre_process_image(img_path, 299)
-                result = self._process_image(pre_processed_image)
+                ben_color_image = pre.load_ben_color(pre_processed_image)
+                img = Image.fromarray(ben_color_image)
+                img_path = f"{BASE_DIR}/tmp/preprocess_images/{item['img_name']}.jpeg"
+                img.save(img_path, quality=95)
+                print("AAAAAA")
+                result = self._process_image(img_path)
+
                 result, description = clasify(result)
-                result_code="OK"
-                #item_result = {'img_name': item['img_name'], 'result': str(result), 'description': description, 'result_code': "OK"}
-                
+                result_code="OK"              
 
             else:
                 if not brightness_level_ok:
                     description="La imagen no posee la calidad suficiente"
                     result_code="poorQualityImage"
-                    #item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no posee la calidad suficiente", 'result_code': "poorQualityImage"}
 
                 if not is_retinography:
                     description="La imagen no es una retinografia"
                     result_code="invalidImage"
-                    #item_result = {'img_name': item['img_name'], 'result': str(result), 'description': "La imagen no es una retinografia", 'result_code': "invalidImage"}
 
             item_result.update(result=result, description=description, result_code=result_code)
             results.append(item_result)
@@ -184,33 +186,24 @@ class AnalizeBase64(views.APIView):
     def _is_retinography(self, img_path):
         pre_processed_image = self._pre_process_image(img_path, 224)
         img = pre_processed_image.reshape(1, 224, 224, 3)
-        if RN_VALIDATOR_MODEL.predict(img) < 0.5:
-            return True
+        return True
+        # if RN_VALIDATOR_MODEL.predict(img) < 0.5:
+        #     return True
 
     def _check_brightness_level(self,img_path):
         return (25 < pre.brightness_level(img_path) < 150)
 
     def _pre_process_image(self, image_path, diameter = 299):
 
-        #diameter = 299
         success = 0
         try:
-            # Load the image and clone it for output.
-            image = cv2.imread(os.path.abspath(image_path), -1)
 
+            image = cv2.imread(os.path.abspath(image_path), -1)
             pre_processed_image = pre._resize_and_center_fundus(image, diameter=diameter)
 
             if pre_processed_image is None:
                 print("Could not preprocess {}...".format(image))
             else:
-                # Get the save path for the processed image.
-                # image_filename = pre._get_filename(image_path)
-                # image_jpeg_filename = "{0}.jpg".format(os.path.splitext(
-                #                         os.path.basename(image_filename))[0])
-                # output_path = os.path.join(save_path, image_jpeg_filename)
-
-                # cv2.imwrite('/home/fede/gecko/test.jpeg', pre_processed_image,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
-
                 success += 1
                 return pre_processed_image
 
@@ -220,10 +213,14 @@ class AnalizeBase64(views.APIView):
 
         return success
 
-    def _process_image(self, image):
-        img = image.reshape(1, 299, 299, 3)
-        #print(f"Image shape:{img.shape}")
-        result = RN_INCEPTION_MODEL.predict(img)
+    def _process_image(self, img_path):
+        image = cv2.imread(os.path.abspath(img_path), -1)
+        #img = Image.fromarray(image)
+        
+        #imgg = cv2.resize(img, (299,299), 3)
+        imgg = image.reshape(None, 299, 299, 3)
+        #print(img)
+        result = RN_INCEPTION_MODEL.predict(imgg)
 
         return result[0][0]
 

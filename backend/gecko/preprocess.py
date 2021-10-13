@@ -17,6 +17,7 @@ from pylab import array, arange, uint8
 #from PIL import ImageStat
 import PIL
 import math
+import numpy as np
 
 ########################################################################
 
@@ -301,3 +302,40 @@ def brightness_level(img_path):
     r, g, b = stat.mean
 
     return math.sqrt(0.241 * (r ** 2) + 0.691 * (g ** 2) + 0.068 * (b ** 2))  
+
+
+def crop_image_from_gray(img,tol=7):
+    if img.ndim ==2:
+        mask = img>tol
+        return img[np.ix_(mask.any(1),mask.any(0))]
+    elif img.ndim==3:
+        gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        mask = gray_img>tol
+        
+        check_shape = img[:,:,0][np.ix_(mask.any(1),mask.any(0))].shape[0]
+        if (check_shape == 0): # image is too dark so that we crop out everything,
+            return img # return original image
+        else:
+            img1=img[:,:,0][np.ix_(mask.any(1),mask.any(0))]
+            img2=img[:,:,1][np.ix_(mask.any(1),mask.any(0))]
+            img3=img[:,:,2][np.ix_(mask.any(1),mask.any(0))]
+            img = np.stack([img1,img2,img3],axis=-1)
+        return img
+
+def ben_transformation(images_path):
+  dirs = os.listdir(images_path)
+  for item in dirs:
+    if os.path.isfile(images_path+item):
+      f, e = os.path.splitext(images_path+item)
+      img = load_ben_color(images_path+item)
+      image = Image.fromarray(img)
+      image.save(f + '.jpg', quality=95) # es la maxima calidad de PIL
+  print(f"Transformacion Ben hecha al directorio {images_path}")
+
+def load_ben_color(pre_process_img, sigmaX=10):
+    #image = cv2.imread(path)
+    image = cv2.cvtColor(pre_process_img, cv2.COLOR_BGR2RGB)
+    image = crop_image_from_gray(image)
+    image = cv2.addWeighted( image,4, cv2.GaussianBlur( image , (0,0) , sigmaX) ,-4 ,128)
+    
+    return image

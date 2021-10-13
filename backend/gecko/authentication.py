@@ -40,6 +40,7 @@ class ExpiringTokenAuthentication(TokenAuthentication):
         is_expired, token = token_expire_handler(token)
 
         if is_expired:
+            token.delete()
             raise AuthenticationFailed("The Token is expired")
 
         token.created = timezone.now() + timedelta(seconds=settings.TOKEN_EXPIRED_AFTER_SECONDS) 
