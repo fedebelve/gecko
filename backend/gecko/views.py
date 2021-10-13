@@ -19,7 +19,7 @@ import gecko.preprocess as pre
 import os
 import cv2
 import numpy
-from gecko.settings import BASE_DIR, RN_INCEPTION_MODEL #, RN_VALIDATOR_MODEL
+from gecko.settings import BASE_DIR, RN_INCEPTION_MODEL, RN_VALIDATOR_MODEL
 import tensorflow as tf
 from tensorflow import keras 
 from keras.applications. inception_v3 import InceptionV3
@@ -33,35 +33,6 @@ from rest_framework_api_key.permissions import HasAPIKey
 from organization.permissions import HasOrganizationAPIKey
 from django.contrib.auth.hashers import make_password
 
-# @api_view(['POST'])
-# @authentication_classes([])
-# def signup(request):
-#     if request.method == 'POST':
-#         try:
-#             data = JSONParser().parse(request)
-#             user = User.objects.create_user(data['username'], password=data['password'], first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
-#             user.save()
-#             Profile.objects.create(user=user, nro_doc=data['nro_doc'], country=data['country'], birth_date=data['birth_date'], job_type=data['job_type'], institution=data['institution'])
-#             token = Token.objects.create(user=user)
-#             return JsonResponse({'token':str(token)}, status=201)
-#         except IntegrityError:
-#             return JsonResponse({'error':'That username has already been taken. Please choose a new username'}, status=400)
-
-
-# @api_view(['POST'])
-# @authentication_classes([])
-# def login(request):
-#     if request.method == 'POST':
-#         data = JSONParser().parse(request)
-#         user = authenticate(request, username=data['username'], password=data['password'])
-#         if user is None:
-#             return JsonResponse({'error':'Could not login. Please check username and password'}, status=400)
-#         else:
-#             try:
-#                 token = Token.objects.get(user=user)
-#             except:
-#                 token = Token.objects.create(user=user)
-#             return JsonResponse({'token':str(token)}, status=200)
 
 class Analize(views.APIView):
     authentication_classes = [TokenAuthentication]
@@ -152,11 +123,7 @@ class AnalizeBase64(views.APIView):
             if brightness_level_ok and is_retinography:
                 pre_processed_image = self._pre_process_image(img_path, 299)
                 ben_color_image = pre.load_ben_color(pre_processed_image)
-                img = Image.fromarray(ben_color_image)
-                img_path = f"{BASE_DIR}/tmp/preprocess_images/{item['img_name']}.jpeg"
-                img.save(img_path, quality=95)
-                print("AAAAAA")
-                result = self._process_image(img_path)
+                result = self._process_image(ben_color_image)
 
                 result, description = clasify(result)
                 result_code="OK"              
@@ -186,9 +153,9 @@ class AnalizeBase64(views.APIView):
     def _is_retinography(self, img_path):
         pre_processed_image = self._pre_process_image(img_path, 224)
         img = pre_processed_image.reshape(1, 224, 224, 3)
-        return True
-        # if RN_VALIDATOR_MODEL.predict(img) < 0.5:
-        #     return True
+        
+        if RN_VALIDATOR_MODEL.predict(img) < 0.5:
+            return True
 
     def _check_brightness_level(self,img_path):
         return (25 < pre.brightness_level(img_path) < 150)
@@ -213,13 +180,9 @@ class AnalizeBase64(views.APIView):
 
         return success
 
-    def _process_image(self, img_path):
-        image = cv2.imread(os.path.abspath(img_path), -1)
-        #img = Image.fromarray(image)
-        
-        #imgg = cv2.resize(img, (299,299), 3)
-        imgg = image.reshape(None, 299, 299, 3)
-        #print(img)
+    def _process_image(self, image):       
+        img = cv2.resize(image, (299,299), 3)
+        imgg = img.reshape(1, 299, 299, 3)
         result = RN_INCEPTION_MODEL.predict(imgg)
 
         return result[0][0]
