@@ -32,6 +32,8 @@ from .authentication import token_expire_handler, expires_in
 from rest_framework_api_key.permissions import HasAPIKey
 from organization.permissions import HasOrganizationAPIKey
 from django.contrib.auth.hashers import make_password
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class Analize(views.APIView):
