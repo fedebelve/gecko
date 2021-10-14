@@ -200,7 +200,9 @@ def signin(request):
     user = authenticate(username=signin_serializer.data['username'], password=signin_serializer.data['password'])
 
     if not user:
-        return Response({'detail': 'Invalid Credentials or activate account'}, status=HTTP_401_UNAUTHORIZED)
+        if User.objects.filter(username=signin_serializer.data['username']).exists():
+            return Response({'detail': 'La contraseña es inválida'}, status=HTTP_401_UNAUTHORIZED)
+        return Response({'detail': 'El usuario ingresado no existe'}, status=HTTP_401_UNAUTHORIZED)
 
     try:
         token = Token.objects.get(user=user)
