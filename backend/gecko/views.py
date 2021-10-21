@@ -1,3 +1,4 @@
+from django.db.utils import Error
 from rest_framework import generics, permissions, views
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -207,6 +208,8 @@ def signin(request):
     try:
         token = Token.objects.get(user=user)
         token.delete()
+    except Exception as e:
+        print(e)
     finally:
         token, _ = Token.objects.get_or_create(user=user)
 
