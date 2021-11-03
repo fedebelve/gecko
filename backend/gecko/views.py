@@ -20,7 +20,7 @@ import gecko.preprocess as pre
 import os
 import cv2
 import numpy
-from gecko.settings import BASE_DIR, RN_INCEPTION_MODEL, RN_VALIDATOR_MODEL
+from gecko.settings import BASE_DIR, RN_VALIDATOR_MODEL, RN_INCEPTION_MODEL
 import tensorflow as tf
 from tensorflow import keras 
 from keras.applications. inception_v3 import InceptionV3
@@ -37,65 +37,121 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
-class Analize(views.APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser]
+class CheckImage(views.APIView):
+    permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
+    parser_classes = [JSONParser]
 
-    def post(self, request, filename, format=None):
-        img_path = f"{BASE_DIR}/tmp/{request.FILES['image']}"
-        img = cv2.imdecode(numpy.fromstring(request.FILES['image'].read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
-        cv2.imwrite(img_path, img,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        results = []
 
-        if self._validate(img_path):
-            pre_processed_image = self._pre_process_image(img_path)
-            response = self._process_image(pre_processed_image)
+        for item in data['worklist']:
 
-        else:
-            response = "La imagen no es apta para ser procesada."
-        
-        os.remove(img_path)
+            item['img_bytes'] = item['img_bytes'] + fill(len(item['img_bytes']))
+            img_bytes = base64.b64decode(item['img_bytes'])
 
-        return JsonResponse({'response': str(response)}, status=200)
+            img = Image.open(BytesIO(img_bytes))
+            img_path = f"{BASE_DIR}/tmp/checked_images/{item['img_name']}"
+            if img.mode != "RGB":
+                img = img.convert("RGB")
 
-    def _validate(self,img_path): return pre.brightness_level(img_path) < 100
+            img.save(img_path, "jpeg")
+            brightness_level_ok, is_retinography = pre.validate(img_path)
 
-    def _pre_process_image(self, image_path):
-        diameter = 299
-        success = 0
-        try:
-            # Load the image and clone it for output.
-            image = cv2.imread(os.path.abspath(image_path), -1)
-            #            image = cv2.imread(os.path.abspath(f"{BASE_DIR}/tmp/{filename}"), -1)
+            item_result = {'img_name': item['img_name']}
 
-            pre_processed_image = pre._resize_and_center_fundus(image, diameter=diameter)
+            if brightness_level_ok and is_retinography:
+                description="Imagen apta para ser procesada."
+                result_code="OK"              
 
-            if pre_processed_image is None:
-                print("Could not preprocess {}...".format(image))
             else:
-                # Get the save path for the processed image.
-                # image_filename = pre._get_filename(image_path)
-                # image_jpeg_filename = "{0}.jpg".format(os.path.splitext(
-                #                         os.path.basename(image_filename))[0])
-                # output_path = os.path.join(save_path, image_jpeg_filename)
+                if not brightness_level_ok:
+                    description="La imagen no posee la calidad suficiente."
+                    result_code="poorQualityImage"
 
-                cv2.imwrite('/home/fede/gecko/test.jpeg', pre_processed_image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+                if not is_retinography:
+                    description="La imagen no es una retinografia."
+                    result_code="invalidImage"
 
-                success += 1
-                return pre_processed_image
+                os.remove(img_path)
 
-        except AttributeError as e:
-            print(e)
-            print("Could not preprocess {}...".format(image))
+            item_result.update(description=description, result_code=result_code)
+            results.append(item_result)
+            
+        return JsonResponse({'response': results}, status=200)
 
-        return success
 
-    def _process_image(self, image):
-        img = image.reshape(1, 299, 299, 3)
-        #print(f"Image shape:{img.shape}")
-        result = RN_INCEPTION_MODEL.predict(img)
+class PreprocessImage(views.APIView):
+    permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
+    parser_classes = [JSONParser]
 
-        return result[0][0]
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        results = []
+
+        for item in data['worklist']:
+            checked_img_path = f"{BASE_DIR}/tmp/checked_images/{item['img_name']}"
+            #checked_img_path=f"{BASE_DIR}/tmp/checked_images/tmp/hola.jpeg"
+            preprocess_image = pre.pre_process_image(checked_img_path, 299)
+
+            preprocess_img_path = f"{BASE_DIR}/tmp/preprocess_images/{item['img_name']}.jpeg"
+            cv2.imwrite(preprocess_img_path, preprocess_image)
+            #preprocess_image.save(preprocess_img_path, "jpeg")
+
+            item_result = {'img_name': item['img_name']}
+            result_code="OK"
+
+            item_result.update(result_code=result_code)
+            results.append(item_result)
+            os.remove(checked_img_path)
+            
+        return JsonResponse({'response': results}, status=200)
+
+
+class BenTransformation(views.APIView):
+    permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
+    parser_classes = [JSONParser]
+
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        results = []
+
+        for item in data['worklist']:
+            preprocess_img_path = f"{BASE_DIR}/tmp/preprocess_images/{item['img_name']}.jpeg"
+            bentransformation_image = pre.load_ben_color(preprocess_img_path)
+            bentransformation_img_path = f"{BASE_DIR}/tmp/bentransformation_images/{item['img_name']}.jpeg"
+            cv2.imwrite(bentransformation_img_path, bentransformation_image)
+            #bentransformation_image.save(bentransformation_img_path, "jpeg")
+
+            item_result = {'img_name': item['img_name']}
+            result_code="OK"
+
+            item_result.update(result_code=result_code)
+            results.append(item_result)
+            os.remove(preprocess_img_path)
+            
+        return JsonResponse({'response': results}, status=200)
+
+class ProcessImage(views.APIView):
+    permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
+    parser_classes = [JSONParser]
+
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        results = []
+
+        for item in data['worklist']:
+            bentransformation_img_path = f"{BASE_DIR}/tmp/bentransformation_images/{item['img_name']}.jpeg"
+            result = pre.process_image(bentransformation_img_path)
+            result, description = clasify(result)
+            result_code="OK"              
+            item_result = {'img_name': item['img_name']}
+
+            item_result.update(result=result, description=description, result_code=result_code)
+            results.append(item_result)
+            os.remove(bentransformation_img_path)
+            
+        return JsonResponse({'response': results}, status=200)
 
 class AnalizeBase64(views.APIView):
     #authentication_classes = [TokenAuthentication]

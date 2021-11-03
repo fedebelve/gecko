@@ -18,7 +18,9 @@ from pylab import array, arange, uint8
 import PIL
 import math
 import numpy as np
-
+from gecko.settings import BASE_DIR, RN_VALIDATOR_MODEL, RN_INCEPTION_MODEL
+from rest_framework.exceptions import APIException
+from gecko.utils import get_img_from_path
 ########################################################################
 
 
@@ -332,10 +334,59 @@ def ben_transformation(images_path):
       image.save(f + '.jpg', quality=95) # es la maxima calidad de PIL
   print(f"Transformacion Ben hecha al directorio {images_path}")
 
-def load_ben_color(pre_process_img, sigmaX=10):
-    #image = cv2.imread(path)
+def load_ben_color(path, sigmaX=10):
+    #pre_process_img = cv2.imread(path)
+    pre_process_img=get_img_from_path(path)
     image = cv2.cvtColor(pre_process_img, cv2.COLOR_BGR2RGB)
     image = crop_image_from_gray(image)
     image = cv2.addWeighted( image,4, cv2.GaussianBlur( image , (0,0) , sigmaX) ,-4 ,128)
     
     return image
+
+def pre_process_image(image_path, diameter = 299):
+
+    success = 0
+    try:
+
+        #image = cv2.imread(os.path.abspath(image_path), -1)
+        image = get_img_from_path(image_path)
+        pre_processed_image = _resize_and_center_fundus(image, diameter=diameter)
+
+        if pre_processed_image is None:
+            print("Could not preprocess {}...".format(image))
+        else:
+            success += 1
+            return pre_processed_image
+
+    except Exception as e:
+        print(e)
+        print("Could not preprocess {}...".format(image))
+        raise APIException("Imagen no encontrada")
+
+    return success
+
+def process_image(path):
+    #process_img = cv2.imread(path)
+    image = get_img_from_path(path)
+    img = cv2.resize(image, (299,299), 3)
+    imgg = img.reshape(1, 299, 299, 3)
+    result = RN_INCEPTION_MODEL.predict(imgg)
+
+    return result[0][0]
+
+def is_retinography_img(img_path):
+    pre_processed_image = pre_process_image(img_path, 224)
+    img = pre_processed_image.reshape(1, 224, 224, 3)
+    
+    if RN_VALIDATOR_MODEL.predict(img) < 0.5:
+        return True
+
+def check_brightness_level(img_path):
+    return (25 < brightness_level(img_path) < 150)
+
+
+def validate(img_path):
+    is_retinography = is_retinography_img(img_path)
+    brightness_level_ok = check_brightness_level(img_path)
+
+    return brightness_level_ok, is_retinography

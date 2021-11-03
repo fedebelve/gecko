@@ -5,6 +5,8 @@ from keras.applications. inception_v3 import InceptionV3
 import os
 import random
 from django.conf import settings
+from rest_framework.exceptions import APIException
+import cv2
 #from gecko.settings import RN_UMBRAL_0, RN_UMBRAL_1, RN_UMBRAL_2, RN_UMBRAL_3, RN_UMBRAL_4
 
 
@@ -100,3 +102,14 @@ def fill(cant_bytes):
         fill = '='
 
     return fill
+
+def get_img_from_path(path):
+    try:
+        img = cv2.imread(path)
+    except Exception as e:
+        raise APIException("Error al leer la imagen")
+    
+    if img is None:
+        raise APIException("Error al leer la imagen")
+
+    return img

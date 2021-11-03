@@ -22,6 +22,9 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('signup', views.signup),
     path('signin', views.signin),
-    path('analize/<filename>', views.Analize.as_view()),
-    path('analize/', views.AnalizeBase64.as_view())
+    path('analize/', views.AnalizeBase64.as_view()),
+    path('check/', views.CheckImage.as_view()),
+    path('preprocess/', views.PreprocessImage.as_view()),
+    path('bentransformation/', views.BenTransformation.as_view()),
+    path('process/', views.ProcessImage.as_view()),
 ]
