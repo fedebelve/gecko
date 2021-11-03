@@ -6,7 +6,7 @@
 #
 ########################################################################
 
-from gecko.settings import BASE_DIR, RN_EFFICIENT__MODEL
+from gecko.settings import BASE_DIR, RN_EFFICIENT_MODEL
 import tensorflow as tf
 import os
 import sys
@@ -404,7 +404,7 @@ def process_image(path):
     meta_efficient_val = np.concatenate((principal_breast_Df_efficient_val, yhat_efficient_val), 1)
     meta_VAL = np.concatenate((meta_inception_val, meta_efficient_val), 1)
     y_pred_lr = BLENDING.predict(meta_VAL)
-    clasify(y_pred_lr)
+    return clasify(y_pred_lr)
 
 def is_retinography_img(img_path):
     pre_processed_image = pre_process_image(img_path, 224)
@@ -435,7 +435,7 @@ def get_inception_feature_vector(img_299):
     return principal_breast_Df_inception_val
 
 def get_efficient_feature_vector(img_380):
-    new_model_efficient = Model(inputs = RN_EFFICIENT__MODEL.input, outputs = RN_EFFICIENT__MODEL.get_layer('global_average_pooling2d').output)
+    new_model_efficient = Model(inputs = RN_EFFICIENT_MODEL.input, outputs = RN_EFFICIENT_MODEL.get_layer('global_average_pooling2d').output)
     new_model_efficient.compile()
 
     predicciones_new_model_efficient_val = new_model_efficient.predict(img_380)

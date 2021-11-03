@@ -148,15 +148,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TOKEN_EXPIRED_AFTER_SECONDS = 180000
 
 RN_INCEPTION_MODEL = load_model('inception')
-RN_EFFICIENT__MODEL = load_model('efficient')
+RN_EFFICIENT_MODEL = load_model('efficient')
 RN_VALIDATOR_MODEL = load_model('validator')
-PCA_TEST_INCEPTION = load_pca('inception')
-PCA_TEST_EFFICIENT =  load_pca('efficient')
-BLENDING = load_pca('blending')
+PCA_TEST_INCEPTION = load_pca('inception','pca_test_inception.pkl')
+PCA_TEST_EFFICIENT =  load_pca('efficient','pca_test_efficient.pkl')
+BLENDING = load_pca('blending', 'Definitive_Blending_LR_pickle.sav')
 
 base_models = list()
 base_models.append(('inception', RN_INCEPTION_MODEL))
-base_models.append(('efficient', RN_EFFICIENT__MODEL))
+base_models.append(('efficient', RN_EFFICIENT_MODEL))
 
 
 RN_UMBRAL_0 = 0.5

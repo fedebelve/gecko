@@ -74,10 +74,15 @@ def f1score_m(y_true, y_pred):
 
 
 def load_model(model_name):
-    return tf.keras.models.load_model(os.path.join(settings.MODEL_ROOT, model_name), custom_objects={'f1score_m': f1score_m, 'precision_m': precision_m, 'true_positives_m': true_positives_m, 'recall_m': recall_m, 'accuracy_m': accuracy_m})
+    model=tf.keras.models.load_model(os.path.join(settings.MODEL_ROOT, model_name), custom_objects={'f1score_m': f1score_m, 'precision_m': precision_m, 'true_positives_m': true_positives_m, 'recall_m': recall_m, 'accuracy_m': accuracy_m})
+    print(f'Modelo {model_name} cargado.')
+    return model
 
-def load_pca(pca_name):
-    return pk.load(open(os.path.join(settings.PCA_ROOT, pca_name),'rb'))
+def load_pca(dir, pca_name):
+    file=dir+'/'+pca_name
+    model=pk.load(open(os.path.join(settings.PCA_ROOT, file),'rb'))
+    print(f'PCA {pca_name} cargado.')
+    return model
 
 def clasify(value):
     UMBRAL = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve',

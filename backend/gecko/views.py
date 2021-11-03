@@ -143,6 +143,8 @@ class ProcessImage(views.APIView):
         for item in data['worklist']:
             bentransformation_img_path = f"{BASE_DIR}/tmp/bentransformation_images/{item['img_name']}.jpeg"
             result = pre.process_image(bentransformation_img_path)
+            print("AAA")
+            print(result)
             result, description = clasify(result)
             result_code="OK"              
             item_result = {'img_name': item['img_name']}
