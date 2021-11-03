@@ -7,6 +7,7 @@ import random
 from django.conf import settings
 from rest_framework.exceptions import APIException
 import cv2
+import pickle as pk
 #from gecko.settings import RN_UMBRAL_0, RN_UMBRAL_1, RN_UMBRAL_2, RN_UMBRAL_3, RN_UMBRAL_4
 
 
@@ -75,6 +76,8 @@ def f1score_m(y_true, y_pred):
 def load_model(model_name):
     return tf.keras.models.load_model(os.path.join(settings.MODEL_ROOT, model_name), custom_objects={'f1score_m': f1score_m, 'precision_m': precision_m, 'true_positives_m': true_positives_m, 'recall_m': recall_m, 'accuracy_m': accuracy_m})
 
+def load_pca(pca_name):
+    return pk.load(open(os.path.join(settings.PCA_ROOT, pca_name),'rb'))
 
 def clasify(value):
     UMBRAL = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve',

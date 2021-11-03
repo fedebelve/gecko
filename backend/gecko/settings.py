@@ -12,12 +12,13 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
-from gecko.utils import load_model
+from gecko.utils import load_model, load_pca
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MODEL_ROOT = os.path.join(BASE_DIR, "models")
+PCA_ROOT = os.path.join(BASE_DIR, "pca")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -147,7 +148,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TOKEN_EXPIRED_AFTER_SECONDS = 180000
 
 RN_INCEPTION_MODEL = load_model('inception')
+RN_EFFICIENT__MODEL = load_model('efficient')
 RN_VALIDATOR_MODEL = load_model('validator')
+PCA_TEST_INCEPTION = load_pca('inception')
+PCA_TEST_EFFICIENT =  load_pca('efficient')
+BLENDING = load_pca('blending')
+
+base_models = list()
+base_models.append(('inception', RN_INCEPTION_MODEL))
+base_models.append(('efficient', RN_EFFICIENT__MODEL))
+
 
 RN_UMBRAL_0 = 0.5
 RN_UMBRAL_1 = 1.5
@@ -155,4 +165,4 @@ RN_UMBRAL_2 = 2.5
 RN_UMBRAL_3 = 3.5
 RN_UMBRAL_4 = 4
 
-
+UMBRALES = [0.99,1.99,2.7,3.5]

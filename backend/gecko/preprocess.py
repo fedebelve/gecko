@@ -6,7 +6,7 @@
 #
 ########################################################################
 
-from gecko.settings import BASE_DIR
+from gecko.settings import BASE_DIR, RN_EFFICIENT__MODEL
 import tensorflow as tf
 import os
 import sys
@@ -18,9 +18,13 @@ from pylab import array, arange, uint8
 import PIL
 import math
 import numpy as np
-from gecko.settings import BASE_DIR, RN_VALIDATOR_MODEL, RN_INCEPTION_MODEL
+from gecko.settings import BASE_DIR, RN_VALIDATOR_MODEL, RN_INCEPTION_MODEL, PCA_TEST_EFFICIENT, PCA_TEST_INCEPTION, base_models, UMBRALES,BLENDING
 from rest_framework.exceptions import APIException
 from gecko.utils import get_img_from_path
+from keras.models import Model 
+import pickle as pk
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
 ########################################################################
 
 
@@ -365,14 +369,42 @@ def pre_process_image(image_path, diameter = 299):
 
     return success
 
-def process_image(path):
-    #process_img = cv2.imread(path)
-    image = get_img_from_path(path)
-    img = cv2.resize(image, (299,299), 3)
-    imgg = img.reshape(1, 299, 299, 3)
-    result = RN_INCEPTION_MODEL.predict(imgg)
+# def process_image(path):
+#     #process_img = cv2.imread(path)
+#     image = get_img_from_path(path)
+#     img = cv2.resize(image, (299,299), 3)
+#     imgg = img.reshape(1, 299, 299, 3)
+#     result = RN_INCEPTION_MODEL.predict(imgg)
 
-    return result[0][0]
+#     return result[0][0]
+
+def process_image(path):
+    img_299 = get_img_from_path(path)
+
+    img_299 = cv2.resize(img_299, (299, 299))
+    img_380 = cv2.resize(img_299, (380, 380))
+
+    img_299 = np.expand_dims(img_299, axis=0)
+    img_380 = np.expand_dims(img_380, axis=0)
+
+    # matriz de features + prediccion (meta_VAL)
+    meta_VAL = list()
+    for name, model in base_models:
+        # predict on hold out set
+        if name == 'inception':
+            yhat_inception_val = model.predict(img_299).flatten()
+            yhat_inception_val = yhat_inception_val.reshape(len(yhat_inception_val), 1)
+        if name == 'efficient':
+            yhat_efficient_val = model.predict(img_380).flatten()
+            yhat_efficient_val = yhat_efficient_val.reshape(len(yhat_efficient_val), 1)
+
+    principal_breast_Df_inception_val = get_inception_feature_vector(img_299)
+    principal_breast_Df_efficient_val = get_efficient_feature_vector(img_380)
+    meta_inception_val = np.concatenate((principal_breast_Df_inception_val, yhat_inception_val), 1)
+    meta_efficient_val = np.concatenate((principal_breast_Df_efficient_val, yhat_efficient_val), 1)
+    meta_VAL = np.concatenate((meta_inception_val, meta_efficient_val), 1)
+    y_pred_lr = BLENDING.predict(meta_VAL)
+    clasify(y_pred_lr)
 
 def is_retinography_img(img_path):
     pre_processed_image = pre_process_image(img_path, 224)
@@ -390,3 +422,37 @@ def validate(img_path):
     brightness_level_ok = check_brightness_level(img_path)
 
     return brightness_level_ok, is_retinography
+
+def get_inception_feature_vector(img_299):
+    new_model_inception = Model(inputs = RN_INCEPTION_MODEL.input, outputs = RN_INCEPTION_MODEL.get_layer('global_average_pooling2d').output)
+    new_model_inception.compile()
+
+    predicciones_new_model_inception_val = new_model_inception.predict(img_299)
+    predicciones_new_model_inception_val = StandardScaler().fit_transform(predicciones_new_model_inception_val) # normalizing the features
+
+    principalComponents = PCA_TEST_INCEPTION.transform(predicciones_new_model_inception_val)
+    principal_breast_Df_inception_val = pd.DataFrame(data = principalComponents, columns = ['principal component 1', 'principal component 2','principal component 3','principal component 4','principal component 5','principal component 6','principal component 7','principal component 8','principal component 9','principal component 10'])
+    return principal_breast_Df_inception_val
+
+def get_efficient_feature_vector(img_380):
+    new_model_efficient = Model(inputs = RN_EFFICIENT__MODEL.input, outputs = RN_EFFICIENT__MODEL.get_layer('global_average_pooling2d').output)
+    new_model_efficient.compile()
+
+    predicciones_new_model_efficient_val = new_model_efficient.predict(img_380)
+    predicciones_new_model_efficient_val = StandardScaler().fit_transform(predicciones_new_model_efficient_val) # normalizing the features
+
+    principalComponents = PCA_TEST_EFFICIENT.transform(predicciones_new_model_efficient_val)
+    principal_breast_Df_efficient_val = pd.DataFrame(data = principalComponents, columns = ['principal component 1', 'principal component 2','principal component 3','principal component 4','principal component 5','principal component 6','principal component 7','principal component 8','principal component 9','principal component 10'])
+    return principal_breast_Df_efficient_val
+
+def clasify(value):
+    if (value < UMBRALES[0]):
+      return int(0)
+    if(value < UMBRALES[1]):
+      return int(1)
+    if(value < UMBRALES[2]):
+      return int(2)
+    if(value <= UMBRALES[3]):
+      return int(3)   
+    else:
+      return int(4)
