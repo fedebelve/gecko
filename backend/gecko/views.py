@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 #from backend.gecko import utils
-from gecko.utils import clasify, fill
+from gecko.utils import clasify, fill, get_paths, remove_from, remove_img_from, save_images
 from gecko.serializers import AnalizeSerializer
 from user_profile.models import Profile
 from user_profile.serializers import UserSigninSerializer, UserProfileSerializer, UserSerializer
@@ -84,76 +84,74 @@ class CheckImage(views.APIView):
 class PreprocessImage(views.APIView):
     permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
     parser_classes = [JSONParser]
+    step_name = 'preprocess'
+    previous_step = 'checked'
 
     def post(self, request, format=None):
         data = JSONParser().parse(request)
         results = []
 
         for item in data['worklist']:
-            checked_img_path = f"{BASE_DIR}/tmp/checked_images/{item['img_name']}"
-            #checked_img_path=f"{BASE_DIR}/tmp/checked_images/tmp/hola.jpeg"
-            preprocess_image = pre.pre_process_image(checked_img_path, 299)
-
-            preprocess_img_path = f"{BASE_DIR}/tmp/preprocess_images/{item['img_name']}.jpeg"
-            cv2.imwrite(preprocess_img_path, preprocess_image)
-            #preprocess_image.save(preprocess_img_path, "jpeg")
+            
+            preprocess_image_299, preprocess_image_380 = pre.preprocess_images(item['img_name'])
+            save_images(self.step_name, item['img_name'], preprocess_image_299, preprocess_image_380)
 
             item_result = {'img_name': item['img_name']}
             result_code="OK"
 
             item_result.update(result_code=result_code)
             results.append(item_result)
-            os.remove(checked_img_path)
-            
+            remove_img_from(self.previous_step, item['img_name'])
+        
         return JsonResponse({'response': results}, status=200)
 
 
 class BenTransformation(views.APIView):
     permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
     parser_classes = [JSONParser]
+    step_name = 'bentransformation'
+    previous_step = 'preprocess'
 
     def post(self, request, format=None):
         data = JSONParser().parse(request)
         results = []
 
         for item in data['worklist']:
-            preprocess_img_path = f"{BASE_DIR}/tmp/preprocess_images/{item['img_name']}.jpeg"
-            bentransformation_image = pre.load_ben_color(preprocess_img_path)
-            bentransformation_img_path = f"{BASE_DIR}/tmp/bentransformation_images/{item['img_name']}.jpeg"
-            cv2.imwrite(bentransformation_img_path, bentransformation_image)
-            #bentransformation_image.save(bentransformation_img_path, "jpeg")
+            bentransformation_image_299, bentransformation_image_380 = pre.bentransformation_images(item['img_name'])
+            save_images(self.step_name, item['img_name'], bentransformation_image_299, bentransformation_image_380)
 
             item_result = {'img_name': item['img_name']}
             result_code="OK"
 
             item_result.update(result_code=result_code)
             results.append(item_result)
-            os.remove(preprocess_img_path)
+            remove_img_from(self.previous_step, item['img_name'])
             
         return JsonResponse({'response': results}, status=200)
 
 class ProcessImage(views.APIView):
     permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
     parser_classes = [JSONParser]
+    step_name = 'process'
+    previous_step = 'bentransformation'
 
     def post(self, request, format=None):
         data = JSONParser().parse(request)
         results = []
 
         for item in data['worklist']:
-            bentransformation_img_path = f"{BASE_DIR}/tmp/bentransformation_images/{item['img_name']}.jpeg"
-            result = pre.process_image(bentransformation_img_path)
-            print("AAA")
-            print(result)
+            
+            result = pre.process_image(item['img_name'])
             result, description = clasify(result)
             result_code="OK"              
             item_result = {'img_name': item['img_name']}
 
             item_result.update(result=result, description=description, result_code=result_code)
             results.append(item_result)
-            os.remove(bentransformation_img_path)
+            remove_img_from(self.previous_step, item['img_name'])
             
         return JsonResponse({'response': results}, status=200)
+
 
 class AnalizeBase64(views.APIView):
     #authentication_classes = [TokenAuthentication]

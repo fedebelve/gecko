@@ -8,6 +8,7 @@ from django.conf import settings
 from rest_framework.exceptions import APIException
 import cv2
 import pickle as pk
+from gecko.settings import BASE_DIR
 #from gecko.settings import RN_UMBRAL_0, RN_UMBRAL_1, RN_UMBRAL_2, RN_UMBRAL_3, RN_UMBRAL_4
 
 
@@ -121,3 +122,25 @@ def get_img_from_path(path):
         raise APIException("Error al leer la imagen")
 
     return img
+
+
+def get_paths(step, img_name):
+    if step == 'checked':
+        return f"{BASE_DIR}/tmp/{step}_images/{img_name}"
+
+    path_299 = f"{BASE_DIR}/tmp/{step}_images/299/{img_name}.jpeg"
+    path_380 = f"{BASE_DIR}/tmp/{step}_images/380/{img_name}.jpeg"
+    return path_299, path_380
+
+def remove_img_from(step, img_name):
+    path_299, path_380 = get_paths(step, img_name)   
+    os.remove(path_299)
+    if not step == 'checked':
+        os.remove(path_380)
+    pass
+
+def save_images(step, img_name, img_299, img_380):
+    path_299, path_380 = get_paths(step, img_name)
+    cv2.imwrite(path_299, img_299)
+    cv2.imwrite(path_380, img_380)
+    pass

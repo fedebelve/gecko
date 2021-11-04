@@ -20,7 +20,7 @@ import math
 import numpy as np
 from gecko.settings import BASE_DIR, RN_VALIDATOR_MODEL, RN_INCEPTION_MODEL, PCA_TEST_EFFICIENT, PCA_TEST_INCEPTION, base_models, UMBRALES,BLENDING
 from rest_framework.exceptions import APIException
-from gecko.utils import get_img_from_path
+from gecko.utils import get_img_from_path, get_paths
 from keras.models import Model 
 import pickle as pk
 from sklearn.preprocessing import StandardScaler
@@ -347,13 +347,14 @@ def load_ben_color(path, sigmaX=10):
     
     return image
 
-def pre_process_image(image_path, diameter = 299):
+def pre_process_image_from(image_path, diameter = 299):
 
     success = 0
     try:
 
         #image = cv2.imread(os.path.abspath(image_path), -1)
         image = get_img_from_path(image_path)
+        
         pre_processed_image = _resize_and_center_fundus(image, diameter=diameter)
 
         if pre_processed_image is None:
@@ -378,8 +379,11 @@ def pre_process_image(image_path, diameter = 299):
 
 #     return result[0][0]
 
-def process_image(path):
-    img_299 = get_img_from_path(path)
+def process_image(img_name):
+    bentransformation_img_path_299, bentransformation_img_path_380 = get_paths('bentransformation', 'img_name')
+
+    img_299 = get_img_from_path(bentransformation_img_path_299)
+    img_380 = get_img_from_path(bentransformation_img_path_380)
 
     img_299 = cv2.resize(img_299, (299, 299))
     img_380 = cv2.resize(img_299, (380, 380))
@@ -407,7 +411,7 @@ def process_image(path):
     return clasify(y_pred_lr)
 
 def is_retinography_img(img_path):
-    pre_processed_image = pre_process_image(img_path, 224)
+    pre_processed_image = pre_process_image_from(img_path, 224)
     img = pre_processed_image.reshape(1, 224, 224, 3)
     
     if RN_VALIDATOR_MODEL.predict(img) < 0.5:
@@ -444,6 +448,19 @@ def get_efficient_feature_vector(img_380):
     principalComponents = PCA_TEST_EFFICIENT.transform(predicciones_new_model_efficient_val)
     principal_breast_Df_efficient_val = pd.DataFrame(data = principalComponents, columns = ['principal component 1', 'principal component 2','principal component 3','principal component 4','principal component 5','principal component 6','principal component 7','principal component 8','principal component 9','principal component 10'])
     return principal_breast_Df_efficient_val
+
+def preprocess_images(img_name):
+    checked_img_path = get_paths('checked', img_name)
+    preprocess_image_299 = pre_process_image_from(checked_img_path, 299)
+    preprocess_image_380 = pre_process_image_from(checked_img_path, 380)
+    return preprocess_image_299, preprocess_image_380
+
+def bentransformation_images(img_name):
+    preprocess_img_path_299, preprocess_img_path_380 = get_paths('preprocess', img_name)
+    bentransformation_image_299 = load_ben_color(preprocess_img_path_299)
+    bentransformation_image_390 = load_ben_color(preprocess_img_path_380)
+    return bentransformation_image_299, bentransformation_image_390
+
 
 def clasify(value):
     if (value < UMBRALES[0]):
