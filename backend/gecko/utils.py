@@ -124,6 +124,7 @@ def remove_img_from(step, img_name):
         os.remove(path_299)
         return
     path_299, path_380 = get_paths(step, img_name)   
+    os.remove(path_299)
     os.remove(path_380)
     pass
 
