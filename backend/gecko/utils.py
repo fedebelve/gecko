@@ -114,15 +114,17 @@ def get_paths(step, img_name):
     if step == 'checked':
         return f"{BASE_DIR}/tmp/{step}_images/{img_name}"
 
-    path_299 = f"{BASE_DIR}/tmp/{step}_images/299/{img_name}.jpeg"
-    path_380 = f"{BASE_DIR}/tmp/{step}_images/380/{img_name}.jpeg"
+    path_299 = f"{BASE_DIR}/tmp/{step}_images/299/{img_name}"
+    path_380 = f"{BASE_DIR}/tmp/{step}_images/380/{img_name}"
     return path_299, path_380
 
 def remove_img_from(step, img_name):
+    if step == 'checked':
+        path_299 = get_paths(step, img_name)
+        os.remove(path_299)
+        return
     path_299, path_380 = get_paths(step, img_name)   
-    os.remove(path_299)
-    if not step == 'checked':
-        os.remove(path_380)
+    os.remove(path_380)
     pass
 
 def save_images(step, img_name, img_299, img_380):

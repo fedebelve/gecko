@@ -380,7 +380,7 @@ def pre_process_image_from(image_path, diameter = 299):
 #     return result[0][0]
 
 def process_image(img_name):
-    bentransformation_img_path_299, bentransformation_img_path_380 = get_paths('bentransformation', 'img_name')
+    bentransformation_img_path_299, bentransformation_img_path_380 = get_paths('bentransformation', img_name)
 
     img_299 = get_img_from_path(bentransformation_img_path_299)
     img_380 = get_img_from_path(bentransformation_img_path_380)

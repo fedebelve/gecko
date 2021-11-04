@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 #from backend.gecko import utils
-from gecko.utils import clasify, fill, get_paths, remove_from, remove_img_from, save_images
+from gecko.utils import fill, get_paths, remove_img_from, save_images
 from gecko.serializers import AnalizeSerializer
 from user_profile.models import Profile
 from user_profile.serializers import UserSigninSerializer, UserProfileSerializer, UserSerializer
@@ -184,7 +184,7 @@ class AnalizeBase64(views.APIView):
                 ben_color_image = pre.load_ben_color(pre_processed_image)
                 result = self._process_image(ben_color_image)
 
-                result, description = clasify(result)
+                result, description = pre.clasify(result)
                 result_code="OK"              
 
             else:
