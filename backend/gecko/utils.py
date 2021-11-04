@@ -1,3 +1,4 @@
+from pathlib import Path
 from gecko import settings
 import tensorflow as tf
 from tensorflow import keras 
@@ -8,7 +9,9 @@ from django.conf import settings
 from rest_framework.exceptions import APIException
 import cv2
 import pickle as pk
-from gecko.settings import BASE_DIR
+# from gecko.settings import BASE_DIR
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 def create_model():
     random.seed(42)
