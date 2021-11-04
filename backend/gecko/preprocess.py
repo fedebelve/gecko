@@ -408,7 +408,7 @@ def process_image(img_name):
     meta_efficient_val = np.concatenate((principal_breast_Df_efficient_val, yhat_efficient_val), 1)
     meta_VAL = np.concatenate((meta_inception_val, meta_efficient_val), 1)
     y_pred_lr = BLENDING.predict(meta_VAL)
-    return clasify(y_pred_lr)
+    return y_pred_lr
 
 def is_retinography_img(img_path):
     pre_processed_image = pre_process_image_from(img_path, 224)
@@ -463,13 +463,16 @@ def bentransformation_images(img_name):
 
 
 def clasify(value):
+    DESCRIPCION = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve',
+            'Retinopatía Diabética No Proliferativa Moderada', 'Retinopatía Diabética No Proliferativa Severa',
+            'Retinopatía Diabética Proliferativa']
     if (value < UMBRALES[0]):
-      return int(0)
+      return int(0), DESCRIPCION[0]
     if(value < UMBRALES[1]):
-      return int(1)
+      return int(1), DESCRIPCION[1]
     if(value < UMBRALES[2]):
-      return int(2)
+      return int(2), DESCRIPCION[2]
     if(value <= UMBRALES[3]):
-      return int(3)   
+      return int(3), DESCRIPCION[3]
     else:
-      return int(4)
+      return int(4), DESCRIPCION[4]

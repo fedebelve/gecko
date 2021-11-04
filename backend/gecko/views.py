@@ -142,8 +142,8 @@ class ProcessImage(views.APIView):
         for item in data['worklist']:
             
             result = pre.process_image(item['img_name'])
-            result, description = clasify(result)
-            result_code="OK"              
+            result, description = pre.clasify(result)
+            result_code="OK"
             item_result = {'img_name': item['img_name']}
 
             item_result.update(result=result, description=description, result_code=result_code)

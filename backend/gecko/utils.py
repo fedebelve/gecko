@@ -9,8 +9,6 @@ from rest_framework.exceptions import APIException
 import cv2
 import pickle as pk
 from gecko.settings import BASE_DIR
-#from gecko.settings import RN_UMBRAL_0, RN_UMBRAL_1, RN_UMBRAL_2, RN_UMBRAL_3, RN_UMBRAL_4
-
 
 def create_model():
     random.seed(42)
@@ -84,21 +82,6 @@ def load_pca(dir, pca_name):
     model=pk.load(open(os.path.join(settings.PCA_ROOT, file),'rb'))
     print(f'PCA {pca_name} cargado.')
     return model
-
-def clasify(value):
-    UMBRAL = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve',
-              'Retinopatía Diabética No Proliferativa Moderada', 'Retinopatía Diabética No Proliferativa Severa',
-              'Retinopatía Diabética Proliferativa']
-    if value < settings.RN_UMBRAL_0:
-        return int(0), UMBRAL[0]
-    if value < settings.RN_UMBRAL_1:
-        return int(1), UMBRAL[1]
-    if value < settings.RN_UMBRAL_2:
-        return int(2), UMBRAL[2]
-    if value <= settings.RN_UMBRAL_3:
-        return int(3), UMBRAL[3]
-    else:
-        return int(4), UMBRAL[4]
 
 def fill(cant_bytes):
     resto = cant_bytes%4

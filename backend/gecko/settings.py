@@ -158,11 +158,4 @@ base_models = list()
 base_models.append(('inception', RN_INCEPTION_MODEL))
 base_models.append(('efficient', RN_EFFICIENT_MODEL))
 
-
-RN_UMBRAL_0 = 0.5
-RN_UMBRAL_1 = 1.5
-RN_UMBRAL_2 = 2.5
-RN_UMBRAL_3 = 3.5
-RN_UMBRAL_4 = 4
-
 UMBRALES = [0.99,1.99,2.7,3.5]
