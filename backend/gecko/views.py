@@ -11,7 +11,6 @@ from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-#from backend.gecko import utils
 from gecko.utils import fill, get_paths, remove_img_from, save_images
 from gecko.serializers import AnalizeSerializer
 from user_profile.models import Profile
@@ -35,7 +34,6 @@ from organization.permissions import HasOrganizationAPIKey
 from django.contrib.auth.hashers import make_password
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
 
 class CheckImage(views.APIView):
     permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
@@ -78,6 +76,75 @@ class CheckImage(views.APIView):
             item_result.update(description=description, result_code=result_code)
             results.append(item_result)
             
+        return JsonResponse({'response': results}, status=200)
+
+
+# 1. Validar si la imagen es una retinografía
+class CheckValidImage(views.APIView):
+    permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
+    parser_classes = [JSONParser]
+
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        results = []
+
+        for item in data['worklist']:
+            item['img_bytes'] = item['img_bytes'] + fill(len(item['img_bytes']))
+            img_bytes = base64.b64decode(item['img_bytes'])
+
+            img = Image.open(BytesIO(img_bytes))
+            img_path = f"{BASE_DIR}/tmp/checked_images/{item['img_name']}"
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+
+            img.save(img_path, "jpeg")
+            _, is_retinography = pre.validate(img_path)
+
+            item_result = {'img_name': item['img_name']}
+
+            if is_retinography:
+                description = "La imagen es una retinografía."
+                result_code = "OK"
+            else:
+                if not is_retinography:
+                    description = "La imagen no es una retinografía."
+                    result_code = "invalidImage"
+                    os.remove(img_path)
+
+            item_result.update(description=description, result_code=result_code)
+            results.append(item_result)
+
+        return JsonResponse({'response': results}, status=200)
+
+
+# 2. Validar la calidad (brillo) de la imagen
+class CheckImageQuality(views.APIView):
+    permission_classes = [IsAuthenticated | HasOrganizationAPIKey]
+    parser_classes = [JSONParser]
+    step_name = 'checked'
+
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        results = []
+
+        for item in data['worklist']:
+            img_path = get_paths(self.step_name, item['img_name'])
+            brightness_level_ok, _ = pre.validate(img_path)
+
+            item_result = {'img_name': item['img_name']}
+
+            if brightness_level_ok:
+                description = "Imagen apta para ser procesada."
+                result_code = "OK"
+            else:
+                if not brightness_level_ok:
+                    description = "La imagen no posee la calidad suficiente."
+                    result_code = "poorQualityImage"
+                    os.remove(img_path)
+
+            item_result.update(description=description, result_code=result_code)
+            results.append(item_result)
+
         return JsonResponse({'response': results}, status=200)
 
 
