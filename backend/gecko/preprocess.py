@@ -476,3 +476,45 @@ def clasify(value):
       return int(3), DESCRIPCION[3]
     else:
       return int(4), DESCRIPCION[4]
+
+max_4 = lambda a : 4 if a > 4 else a
+min_0 = lambda a : 0 if a < 0 else a
+
+def grado_rd(output):
+  grado = 0
+  for um in UMBRALES:
+    if output < um:
+      break
+    else:
+      grado += 1
+  return grado
+
+def certeza(output):
+  max_4(output) 
+  min_0(output)
+  
+  grado = grado_rd(output)
+  if grado != 4:
+    cota_superior = UMBRALES[grado]
+  else:
+    cota_superior = 4.5
+
+  if grado == 0:
+    cota_inferior = -0.5
+  else:
+    cota_inferior = UMBRALES[grado-1]
+  
+  punto_medio = (cota_superior - cota_inferior) / 2 + cota_inferior
+  
+  error = punto_medio - output
+
+  dif_con_medio = abs(error)
+
+  certeza = 1 - dif_con_medio / ((cota_superior - cota_inferior)/2)
+
+  certeza = certeza/4     # la lejania del centro de los umbrales va a modificar solo el 25% de la certeza
+  certeza += 0.75         # siempre va a estar arriba de 75%
+  certeza = certeza * 100 # paso a porcentaje
+  if certeza == 100:
+    certeza = 99.3        # por si da 100%
+  return certeza

@@ -210,10 +210,11 @@ class ProcessImage(views.APIView):
             
             result = pre.process_image(item['img_name'])
             result, description = pre.clasify(result)
+            certeza = pre.certeza(result)
             result_code="OK"
             item_result = {'img_name': item['img_name']}
 
-            item_result.update(result=result, description=description, result_code=result_code)
+            item_result.update(result=result, description=description, result_code=result_code, certeza=certeza)
             results.append(item_result)
             remove_img_from(self.previous_step, item['img_name'])
             
