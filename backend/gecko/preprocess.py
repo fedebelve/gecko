@@ -463,9 +463,9 @@ def bentransformation_images(img_name):
 
 
 def clasify(value):
-    DESCRIPCION = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve',
-            'Retinopatía Diabética No Proliferativa Moderada', 'Retinopatía Diabética No Proliferativa Severa',
-            'Retinopatía Diabética Proliferativa']
+    DESCRIPCION = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve.',
+            'Retinopatía Diabética No Proliferativa Moderada.', 'Retinopatía Diabética No Proliferativa Severa.',
+            'Retinopatía Diabética Proliferativa.']
     if (value < UMBRALES[0]):
       return int(0), DESCRIPCION[0]
     if(value < UMBRALES[1]):
