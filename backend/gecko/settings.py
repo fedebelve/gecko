@@ -26,7 +26,7 @@ PCA_ROOT = os.path.join(BASE_DIR, "pca")
 SECRET_KEY = 'django-insecure-)yiw6#q_)nvf0xw1b&#mmww1c)j830=q-4a+=mx*x+ffr40kk='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*', 'localhost','127.0.1.0']
 

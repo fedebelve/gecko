@@ -209,8 +209,8 @@ class ProcessImage(views.APIView):
         for item in data['worklist']:
             
             result = pre.process_image(item['img_name'])
+            certeza = pre.certeza(result[0])
             result, description = pre.clasify(result)
-            certeza = pre.certeza(result)
             result_code="OK"
             item_result = {'img_name': item['img_name']}
 
