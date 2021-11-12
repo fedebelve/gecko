@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_api_key',
-    'corsheaders'
+    'corsheaders',
+    'channels'
 ]
 
 REST_FRAMEWORK = {
@@ -75,7 +76,7 @@ ROOT_URLCONF = 'gecko.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR.joinpath('templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -89,6 +90,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'gecko.wsgi.application'
+ASGI_APPLICATION = 'gecko.asgi.application'
 
 
 # Database
@@ -147,12 +149,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TOKEN_EXPIRED_AFTER_SECONDS = 180000
 
-RN_INCEPTION_MODEL = load_model('inception')
-RN_EFFICIENT_MODEL = load_model('efficient')
-RN_VALIDATOR_MODEL = load_model('validator')
-PCA_TEST_INCEPTION = load_pca('inception','pca_test_inception.pkl')
-PCA_TEST_EFFICIENT =  load_pca('efficient','pca_test_efficient.pkl')
-BLENDING = load_pca('blending', 'Definitive_Blending_LR_pickle.sav')
+# RN_INCEPTION_MODEL = load_model('inception')
+# RN_EFFICIENT_MODEL = load_model('efficient')
+# RN_VALIDATOR_MODEL = load_model('validator')
+# PCA_TEST_INCEPTION = load_pca('inception','pca_test_inception.pkl')
+# PCA_TEST_EFFICIENT =  load_pca('efficient','pca_test_efficient.pkl')
+# BLENDING = load_pca('blending', 'Definitive_Blending_LR_pickle.sav')
+
+RN_INCEPTION_MODEL = 1
+RN_EFFICIENT_MODEL = 2
+RN_VALIDATOR_MODEL = 3
+PCA_TEST_INCEPTION = 4
+PCA_TEST_EFFICIENT = 5
+BLENDING = 6
 
 base_models = list()
 base_models.append(('inception', RN_INCEPTION_MODEL))

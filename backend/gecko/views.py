@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from django.db.utils import Error
 from rest_framework import generics, permissions, views
 from django.utils import timezone
@@ -363,3 +364,6 @@ def signup(request):
     Profile.objects.create(user=user, nro_doc=data['nro_doc'], country=data['country'], birth_date=data['birth_date'], job_type=data['job_type'], institution=data['institution'])
     
     return Response({}, status=HTTP_201_CREATED)
+
+def index(request):
+    return render(request, 'index.html', context={'text': 'Hello World!'})

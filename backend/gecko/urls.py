@@ -29,4 +29,5 @@ urlpatterns = [
     path('preprocess/', views.PreprocessImage.as_view()),
     path('bentransformation/', views.BenTransformation.as_view()),
     path('process/', views.ProcessImage.as_view()),
+    path('', views.index)
 ]
