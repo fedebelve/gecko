@@ -3,6 +3,7 @@ backend/models
 
 # Exclude virtual enviroment folder
 /gecko
+/project-name
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

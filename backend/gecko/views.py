@@ -209,12 +209,12 @@ class ProcessImage(views.APIView):
         for item in data['worklist']:
             
             result = pre.process_image(item['img_name'])
+            certeza = pre.certeza(result[0])
             result, description = pre.clasify(result)
-            certeza = pre.certeza(result)
             result_code="OK"
             item_result = {'img_name': item['img_name']}
 
-            item_result.update(result=result, description=description, result_code=result_code, certeza="{:.3f}".format(certeza))
+            item_result.update(result=result, description=description, result_code=result_code, certeza="{:.1f}".format(certeza))
             results.append(item_result)
             remove_img_from(self.previous_step, item['img_name'])
             

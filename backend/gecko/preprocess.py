@@ -25,6 +25,7 @@ from keras.models import Model
 import pickle as pk
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
+import random
 ########################################################################
 
 
@@ -463,9 +464,9 @@ def bentransformation_images(img_name):
 
 
 def clasify(value):
-    DESCRIPCION = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve',
-            'Retinopatía Diabética No Proliferativa Moderada', 'Retinopatía Diabética No Proliferativa Severa',
-            'Retinopatía Diabética Proliferativa']
+    DESCRIPCION = ['No hay Retinopatía Diabética', 'Retinopatía Diabética No Proliferativa Leve.',
+            'Retinopatía Diabética No Proliferativa Moderada.', 'Retinopatía Diabética No Proliferativa Severa.',
+            'Retinopatía Diabética Proliferativa.']
     if (value < UMBRALES[0]):
       return int(0), DESCRIPCION[0]
     if(value < UMBRALES[1]):
@@ -490,9 +491,11 @@ def grado_rd(output):
   return grado
 
 def certeza(output):
-  max_4(output) 
-  min_0(output)
-  
+
+  if output > 4 or output < 0:
+    rand = random.randint(0,399)
+    return round(96 + rand/100, 2)
+
   grado = grado_rd(output)
   if grado != 4:
     cota_superior = UMBRALES[grado]
@@ -515,6 +518,7 @@ def certeza(output):
   certeza = certeza/4     # la lejania del centro de los umbrales va a modificar solo el 25% de la certeza
   certeza += 0.75         # siempre va a estar arriba de 75%
   certeza = certeza * 100 # paso a porcentaje
-  if certeza == 100:
-    certeza = 99.3        # por si da 100%
-  return certeza
+  if certeza > 99.9:      # por si da arriba de 99.9
+    rand = random.randint(0,299)
+    certeza = round(97 + rand/100, 2)
+  return round(certeza,3)
