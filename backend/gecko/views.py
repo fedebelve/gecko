@@ -13,7 +13,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from gecko.utils import fill, get_paths, remove_img_from, save_images
 from gecko.serializers import AnalizeSerializer
-from user_profile.models import Profile
+from user_profile.models import Profile, ConsumedService
 from user_profile.serializers import UserSigninSerializer, UserProfileSerializer, UserSerializer
 import gecko.preprocess as pre 
 import os
@@ -214,7 +214,12 @@ class ProcessImage(views.APIView):
             result_code="OK"
             item_result = {'img_name': item['img_name']}
 
-            item_result.update(result=result, description=description, result_code=result_code, certeza="{:.1f}".format(certeza))
+            profile = Profile.objects.get(user=request.user)
+            consumed_services=ConsumedService.objects.get(user=request.user)
+            consumed_services.analized_images += 1
+            consumed_services.save()
+
+            item_result.update(result=result, description=description, result_code=result_code, certeza="{:.1f}".format(certeza), user_plan=profile.user_plan ,consumed_services=consumed_services.analized_images) #agregar cantidad de imags analizadas
             results.append(item_result)
             remove_img_from(self.previous_step, item['img_name'])
             
@@ -340,8 +345,9 @@ def signin(request):
 
     is_expired, token = token_expire_handler(token)
     user_serialized = UserSigninSerializer(user)
+    consumed_service=ConsumedService.objects.get(user=user)
 
-    return Response({'token': token.key,'first_name':  user.first_name,'last_name': user.last_name, 'expires_in': expires_in(token)}, status=HTTP_200_OK)
+    return Response({'token': token.key,'first_name':  user.first_name,'last_name': user.last_name, 'analized_images': consumed_service.analized_images, '_last_modified': consumed_service._last_modified,'expires_in': expires_in(token)}, status=HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -350,8 +356,8 @@ def signin(request):
 def signup(request):
 
     data = JSONParser().parse(request)
-    user_serializer = UserSerializer(data = {'username': data['username'], 'password': make_password(data['password']), 'first_name': data['first_name'], 'last_name': data['last_name'], 'email':data['email']})
-    user_profile_serializer = UserProfileSerializer(data = {'nro_doc': data['nro_doc'], 'country': data['country'], 'birth_date': data['birth_date'], 'job_type': data['job_type'], 'institution': data['institution']})
+    user_serializer = UserSerializer(data = {'username': data['username'], 'password': make_password(data['password']), 'first_name': data['first_name'], 'last_name': data['last_name'], 'email':data['email'], 'user_plan': data['user_plan']})
+    user_profile_serializer = UserProfileSerializer(data = {'nro_doc': data['nro_doc'], 'country': data['country'], 'birth_date': data['birth_date'], 'job_type': data['job_type'], 'institution': data['institution'], 'user_plan': data['user_plan']})
 
     user_valid = user_serializer.is_valid()
     profile_valid = user_profile_serializer.is_valid()
@@ -360,6 +366,7 @@ def signup(request):
         return Response({'user': user_serializer.errors, 'profile': user_profile_serializer.errors}, status=HTTP_400_BAD_REQUEST)
 
     user = user_serializer.save()
-    Profile.objects.create(user=user, nro_doc=data['nro_doc'], country=data['country'], birth_date=data['birth_date'], job_type=data['job_type'], institution=data['institution'])
-    
+    Profile.objects.create(user=user, nro_doc=data['nro_doc'], country=data['country'], birth_date=data['birth_date'], job_type=data['job_type'], institution=data['institution'], user_plan=data['user_plan'])
+    ConsumedService.objects.create(user=user)
+
     return Response({}, status=HTTP_201_CREATED)

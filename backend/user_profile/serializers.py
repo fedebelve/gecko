@@ -16,6 +16,6 @@ class UserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['nro_doc', 'country', 'birth_date', 'job_type', 'institution']
+        fields = ['nro_doc', 'country', 'birth_date', 'job_type', 'institution', 'user_plan']
         
         
